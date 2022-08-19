@@ -131,20 +131,53 @@ git branch -d 	//删除节点
 
 #### git加速问题
 
-- git access
+```
+https://qu.js.cn/how-to-speed-github/
+```
 
-  ```
-  https://qu.js.cn/how-to-speed-github/
-  ```
+windows系统中修改C:\Windows\System32\drivers\etc\hosts文件的权限，指定可写入；
 
-  windows系统中修改C:\Windows\System32\drivers\etc\hosts文件的权限，指定可写入；
+用编辑器打开hosts文件，在末尾处添加以下内容：
 
-  用编辑器打开hosts文件，在末尾处添加以下内容：
+```
+199.232.69.194 github.global.ssl.fastly.net
+140.82.112.4 github.com
+```
 
-  ```
-  199.232.69.194 github.global.ssl.fastly.net
-  140.82.112.4 github.com
-  ```
+#### git bash here not found
 
-  
+```
+https://www.cnblogs.com/xinxin1994/p/10422720.html
+```
+
+1、Win+R 打开运行输入regedit 回车打开注册表
+
+2、找到[HKEY_CLASSES_ROOT\Directory\Background]。
+
+3、在[Background]下如果没有[shell],则右键-新建项[shell]。
+
+4、在[shell]下右键-新建项[Git Bash Here],其值为“Git Bash Here",此为右键菜单显示名称。
+
+   此时在任意位置鼠标右击就能看到Git Bash Here但是没有关联程序，现在还没有实际作用
+
+5、 在[Git Bash Here]下右键-新建-项[command],其默认值为 "git安装根目录\bin\bash.exe"
+
+6、再完善一下添加一个Git的小图标：选中Git Bash Here右击-新建-字符串值，名称为Icon,双击编辑，
+
+   其值为“git安装根目录\\mingw64\share\git\git-for-windows.ico”。
+
+#### unable to access
+
+```
+https://blog.csdn.net/good_good_xiu/article/details/118567249
+```
+
+命令行输入
+
+```
+//取消http代理
+git config --global --unset http.proxy
+//取消https代理 
+git config --global --unset https.proxy
+```
 
