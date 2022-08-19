@@ -28,8 +28,7 @@ github首先创建reponsitory
 
 ```
 git init //把这个目录变成Git可以管理的仓库
-git add README.md //文件添加到仓库
-git add . //不但可以跟单一文件，还可以跟通配符，更可以跟目录。一个点就把当前目录下所有未追踪的文件全部add了 
+git add . //不但可以跟单一文件，还可以跟通配符，更可以跟目录。一个点就把当前目录下所有未追踪的文件全部add了，添加到暂存区
 git commit -m "first commit" // git add 命令将内容写入暂存区。git commit 命令将暂存区内容添加到本地仓库中，-m标注
 git remote add origin *** //关联远程仓库
 git push -u origin master //把本地库的所有内容推送到远程库上，-u指定默认主机，以后就可以不用加-u默认上传master
@@ -54,9 +53,9 @@ git push -u origin test
 #### 单独上传更新文件或分支
 
 ```
-git diff  //查看版本差异，在这之前最好加上git fetch，因为这个比较的是本地的仓库和目录中的差异
+git diff  //比较文件在暂存区和工作区的差异,工作区即仓库
 git add . //不但可以跟单一文件，还可以跟通配符，更可以跟目录。一个点就把当前目录下所有未追踪的文件全部add了 
-git commit -m "first commit" //把文件提交到仓库并标注
+git commit -m "fix" //把文件提交到仓库并标注
 git remote add origin *** //关联远程仓库
 git push -u origin master //把本地库的所有内容推送到远程库上
 ```
