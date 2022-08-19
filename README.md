@@ -47,7 +47,7 @@ git checkout test	//master分支是仓库默认的主分支，把工作从master
 //内容修改完成后，通过下面命令把内容提交给test分支下
 git add .
 git commit -m "test commit" //git add 命令将内容写入暂存区。git commit 命令将暂存区内容添加到本地仓库中，-m标注
-git push -u origin test
+git push -u origin test/git push --set-upstream origin test
 ```
 
 #### 单独上传更新文件或分支
@@ -71,9 +71,14 @@ git push -u origin master //把本地库的所有内容推送到远程库上
 ```
 
 git pull origin master	//暴力更新，不会有中间步骤给你核实吗，只适合个人开发
-git fetch	//拉取remote仓库到本地仓库，但不更新目录
+git fetch origin master//拉取remote仓库到本地仓库，但不更新目录
 git merge	//提交并合并remote仓库
 ```
+
+#### 拉取指定分支
+
+1. 直接git clone -b 分支名 仓库地址
+2. 拉取更新的套路，不过需要在本地新建一个分支并转换工作目录
 
 #### 合并分支
 
@@ -95,6 +100,13 @@ git branch -d 	//删除节点
 ##### 疑问：如果当前master分支还未更新，直接合并其它分支到主分支会发生什么？
 
 如果当前修改的文件和remote仓库中文件修改到了同一行（本地还未更新，其他人提交了更新），那么将会造成冲突生成节点3，出错了会很难找问题。
+
+#### 克隆remote仓库
+
+```
+git clone 仓库地址	//地址可以是
+git clone -b 分支名 仓库地址	//克隆指定分支
+```
 
 ### git trouble
 
