@@ -1,13 +1,105 @@
-# linux_study
+# git note
 my linux study note, including kernel/u-boot/qt and so on
 
 ### git command
 
+#### 创建账户
 
+注：如果是**新登录电脑**请注意密钥和权限问题
 
+```
+git config --global user.name "username"	//绑定用户名
+git config --global user.email "email"		//绑定密码
 
+git config user.name   // 获取当前登录的用户
+git config user.email  // 获取当前登录用户的邮箱
+
+git config --global user.name 'userName'    // 修改登陆账号
+git config --global user.email 'email'      // 修改登陆邮箱
+git config --global user.password 'password'  // 修改登陆密码
+
+```
+
+#### 新建reponsitory
+
+github首先创建reponsitory
+
+个人终端
+
+```
+git init //把这个目录变成Git可以管理的仓库
+git add README.md //文件添加到仓库
+git add . //不但可以跟单一文件，还可以跟通配符，更可以跟目录。一个点就把当前目录下所有未追踪的文件全部add了 
+git commit -m "first commit" //标注
+git remote add origin *** //关联远程仓库
+git push -u origin master //把本地库的所有内容推送到远程库上
+```
+
+#### 创建新分支
+
+```
+git status	//查看当前所在分支
+git branch -a	//查看分支
+git branch test	//创建一个分支test
+git checkout test	//master分支是仓库默认的主分支，把工作从master分支下切换到test分支下
+
+//git checkout -b test	//创建并切换test工作分支
+
+//内容修改完成后，通过下面命令把内容提交给test分支下
+git add .
+git commit -m "test commit" //标注
+git push -u origin test
+```
+
+#### 单独上传更新文件或分支
+
+```
+git diff  //查看版本差异
+git add . //不但可以跟单一文件，还可以跟通配符，更可以跟目录。一个点就把当前目录下所有未追踪的文件全部add了 
+git commit -m "first commit" //把文件提交到仓库
+git remote add origin *** //关联远程仓库
+git push -u origin master //把本地库的所有内容推送到远程库上
+```
+
+#### 拉取更新
+
+##### 在此之前需要搞清楚git pull 和 git fetch区别
+
+在我理解：如果是**个人开发**，完全可以使用git pull
+
+如果是**多人开发**，那么git fetch+git merge就非常有必要，可以在git fetch 更新本地仓库时不更新本地目录，并且查看距离上次更新产生了哪些变化。
+
+```
+
+git pull origin master	//暴力更新，不会有中间步骤给你核实吗，只适合个人开发
+git fetch	//拉取remote仓库到本地仓库，但不更新目录
+git merge	//提交并合并remote仓库
+```
+
+#### 合并分支
+
+```
+git status	//查看当前所在分支
+git branch -a	//可以查看当前仓库和remote的分支信息
+git checkout master	//工作从其它分支下切换到master下
+git fetch	//因为是合作开发项目，这时远程仓库中的内容有可能已经发生了变化，所以我们需要先合并仓库，并查看有哪些改变了，方便我们排除错误和后悔
+git merge	//合并更新本地仓库和remote仓库
+git merge test	//将test分支合并到主分支中S
+git status	//查看分支中内容提交的状态
+git push origin master //这个时候就可以用这个了，因为拉取到了最新的remote master仓库
+
+git reset --hard HEAD	//如果感觉合并后的内容有问题，可以通过撤销合并恢复到以前状态。
+git reset --hard ORIG_HEAD	//代码已经提交，撤销的方法是
+git branch -d 	//删除节点
+```
+
+##### 疑问：如果当前master分支还未更新，直接合并其它分支到主分支会发生什么？
+
+如果当前修改的文件和remote仓库中文件修改到了同一行（本地还未更新，其他人提交了更新），那么将会造成冲突生成节点3，出错了会很难找问题。
 
 ### git trouble
+
+#### 密钥和权限问题
 
 - 如何解决 git@github.com permission denied (publickey). fatal could not read from remote repository
 
@@ -35,6 +127,9 @@ my linux study note, including kernel/u-boot/qt and so on
   - 第二步：将SSH key添加到github账户
 
     github >> setting >>SSH and GPG keys >> new SSH key >>Add SSH key
+
+
+#### git加速问题
 
 - git access
 
