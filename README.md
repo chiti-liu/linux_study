@@ -122,7 +122,7 @@ git branch -d 	//删除节点
 
     提示输入秘钥名字和密码，为了方便起见，我这里选择默认地址。
 
-    到文件地址 /c/Users/liujun/.ssh/id_rsa.pub中复制密钥。
+    到文件地址C:\Users\***\.ssh中 id_rsa.pub复制密钥。
 
   - 第二步：将SSH key添加到github账户
 
