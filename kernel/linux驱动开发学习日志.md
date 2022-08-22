@@ -1,8 +1,3 @@
----
-typora-root-url: ..\typora-user-images
-typora-copy-images-to: ..\typora-user-images
----
-
 # <<linux 驱动开发>>学习日志
 
 ```
@@ -139,6 +134,11 @@ https://www.linuxidc.com/Linux/2012-02/53701.htm#:~:text=containe,%E9%87%8F%E7%9
 
 ### 驱动编写步骤
 
+1. 看sch:怎么操作
+2. 看芯片手册
+3. 规划驱动功能
+4. 写驱动、测试程序 
+
 ​        首先查看驱动 kernel/drivers/**目录里面有没有编写对应的驱动，有必要可以参照对应的LRM手册。
 
 - 如果驱动已经实现，则make ARCH=arm menuconfig配置内核，配置好后保存，执行make ARCH=arm uImage 然后拷贝到tftpboot中。然后参照Documentation/devicetree/bindings/**中的文件，修改设备树节点，compatible属性要和驱动相互匹配，保存好执行make ARCH=arm dtbs，并且拷贝到tftboot中，重启开发板
@@ -188,11 +188,17 @@ https://www.cnblogs.com/xiaojiang1025/p/6193959.html
 - 同意类型的tasklet是串行执行的，不会在多个PCU上并发执行。
 - 不同CPU上的进程上下文会并发执行。
 
-![image-20220822140633448](../typora-user-images/image-20220822140633448.png)
+![image-20220822141409545](../typora-user-images/image-20220822141409545.png)
 
 #### 中断屏蔽
 
 #### 原子变量
+
+原子操作保证指令以原子的反射光hi执行，执行过程中不会被打断。假设两个线程thread_afunc和thread_bfunc执行i++操作，那么i最后等于？
+
+![image-20220822142119542](../typora-user-images/image-20220822142119542.png)
+
+
 
 #### 自旋锁
 
@@ -228,3 +234,25 @@ https://www.cnblogs.com/xiaojiang1025/p/6193959.html
 /proc表示正在运行的内存信息映射
 
 /sys硬件设备的驱动程序信息，其中/sys/devices/platform里面有基于平台的所有驱动
+
+### 内联汇编
+
+![image-20220822150643362](../typora-user-images/image-20220822150643362.png)
+
+### 设备树和驱动匹配
+
+platform_match
+
+![image-20220822171342061](../typora-user-images/image-20220822171342061.png)
+
+platform_driver
+
+​	.driver
+
+​		of_match_table
+
+​			of_device_id
+
+​				.compatible
+
+​	(或者).id_table
