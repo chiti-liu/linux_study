@@ -1,3 +1,8 @@
+---
+typora-root-url: ..\typora-user-images
+typora-copy-images-to: ..\typora-user-images
+---
+
 # <<linux 驱动开发>>学习日志
 
 ```
@@ -75,7 +80,7 @@ modinfo: 生成模块的具体版本信息
 
 （hardwareirq,irq）同时注册在domain域中
 
-![image-20220804111804080](C:\Users\liujun\AppData\Roaming\Typora\typora-user-images\image-20220804111804080.png)
+![image-20220804111804080](..\typora-user-images\image-20220804111804080.png)
 
 #### 疑问：如果一个硬件中断同时对应比如按键中断和外部输入中断，那么究竟是怎么详细区分的呢？
 
@@ -83,7 +88,7 @@ modinfo: 生成模块的具体版本信息
 
 #### 异步通知
 
-![image-20220804160358327](C:\Users\liujun\AppData\Roaming\Typora\typora-user-images\image-20220804160358327.png)
+![image-20220804160358327](..\typora-user-images\image-20220804160358327.png)
 
 ### kzalloc/kmalloc/vmalloc
 
@@ -160,7 +165,7 @@ https://www.cnblogs.com/xiaojiang1025/p/6193959.html
 
 ​        **list_head**还是那个用来挂在链表上的结构，包含在一个**kset**的所有kobject构成了一个**双向循环链表**，**list_head**就是这个链表的头部，这个链表用来连接第一个和最后一个kobject对象，第一个kobject使用entry连接kset集合以及第二个kobject对象，第二个kobject对象使用entry连接第一个kobject对象和第三个kobject对象，依次类推，最终形成一个kobject对象的链表。
 
-![image-20220817103056518](C:\Users\liujun\AppData\Roaming\Typora\typora-user-images\image-20220817103056518.png)
+![image-20220817103056518](..\typora-user-images\image-20220817103056518.png)
 
 ### 互斥和同步
 
@@ -178,7 +183,12 @@ https://www.cnblogs.com/xiaojiang1025/p/6193959.html
 
 考虑SMP（Share memory processor）系统：
 
-- 同一类型的中断程序不会并发执行，但是不同类型的中断可能送达
+- 同一类型的中断程序不会并发执行，但是不同类型的中断可能送达可能送达不同的CPU，因此不同类型的中断处理程序可能会并发执行。
+- 同一类型的软中断会在不同的CPU上并发执行。
+- 同意类型的tasklet是串行执行的，不会在多个PCU上并发执行。
+- 不同CPU上的进程上下文会并发执行。
+
+![image-20220822140633448](../typora-user-images/image-20220822140633448.png)
 
 #### 中断屏蔽
 
