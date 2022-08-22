@@ -2,7 +2,7 @@
 
 #### 热插拔
 
-![image-20220816144313750](C:\Users\liujun\AppData\Roaming\Typora\typora-user-images\image-20220816144313750.png)
+![image-20220816144313750](..\typora-user-images\image-20220816144313750.png)
 
 #### 集线器
 
@@ -15,7 +15,7 @@
 3. 负责USB数据的实际传输工作
 4. 实现虚拟根HUB（根集线器）的功能
 
-![image-20220816144800655](C:\Users\liujun\AppData\Roaming\Typora\typora-user-images\image-20220816144800655.png)
+![image-20220816144800655](..\typora-user-images\image-20220816144800655.png)
 
 硬件存在为嵌入在SOC中，所以一般主控制器驱动不需要我们写
 
@@ -25,25 +25,25 @@ drivers/usb/host
 
 ### USB设备驱动
 
-![image-20220816151326257](C:\Users\liujun\AppData\Roaming\Typora\typora-user-images\image-20220816151326257.png)
+![image-20220816151326257](..\typora-user-images\image-20220816151326257.png)
 
 #### 描述符（lsusb -v）
 
 1. 设备描述符：struct usb_device_descriptor（厂家信息）
 
-   ![image-20220816150431489](C:\Users\liujun\AppData\Roaming\Typora\typora-user-images\image-20220816150431489.png)
+   ![image-20220816150431489](..\typora-user-images\image-20220816150431489.png)
 
 2. 配置描述符：struct usb_config_descriptor（寄存器）
 
-   ![image-20220816150524012](C:\Users\liujun\AppData\Roaming\Typora\typora-user-images\image-20220816150524012.png)
+   ![image-20220816150524012](..\typora-user-images\image-20220816150524012.png)
 
 3. 接口描述符：struct usb_interface_descriptor(驱动绑定在接口而不是设备上)
 
-   ![image-20220816150720860](C:\Users\liujun\AppData\Roaming\Typora\typora-user-images\image-20220816150720860.png)
+   ![image-20220816150720860](..\typora-user-images\image-20220816150720860.png)
 
 4. 端点描述符：struct usb_endpoint_descriptor（通讯细节）
 
-   ![image-20220816150930805](C:\Users\liujun\AppData\Roaming\Typora\typora-user-images\image-20220816150930805.png)
+   ![image-20220816150930805](..\typora-user-images\image-20220816150930805.png)
 
 #### 端点 endpoint
 
@@ -64,13 +64,13 @@ usb通信最基本的形式
 
 #### usb requst block （urb）
 
-![image-20220816152727674](C:\Users\liujun\AppData\Roaming\Typora\typora-user-images\image-20220816152727674.png)
+![image-20220816152727674](..\typora-user-images\image-20220816152727674.png)
 
-![image-20220816154010428](C:\Users\liujun\AppData\Roaming\Typora\typora-user-images\image-20220816154010428.png)
+![image-20220816154010428](..\typora-user-images\image-20220816154010428.png)
 
-  ![image-20220816154516059](C:\Users\liujun\AppData\Roaming\Typora\typora-user-images\image-20220816154516059.png)
+  ![image-20220816154516059](..\typora-user-images\image-20220816154516059.png)
 
-![image-20220816155035012](C:\Users\liujun\AppData\Roaming\Typora\typora-user-images\image-20220816155035012.png)
+![image-20220816155035012](..\typora-user-images\image-20220816155035012.png)
 
 ### 操作方法
 

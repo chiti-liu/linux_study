@@ -29,8 +29,8 @@ EXPORT_SYMBOL_GPL	//内部对变量或者函数可以让该函数或变量可以
 
 EXPORT_SYMBOL使用方法
         1. 在模块函数定义之后使用EXPORT_SYMBOL（函数名）
-        2.在调用该函数的模块中使用extern对要使用的符号或者函数进行声明
-         3.首先加载定义该函数的模块，再加载调用该函数的模块
+                2.在调用该函数的模块中使用extern对要使用的符号或者函数进行声明
+                  3.首先加载定义该函数的模块，再加载调用该函数的模块
 
 ```
 modprobe优于insmod: 自动加载被依赖的模块，insmod要注意自己模块加载的先后可能导致的问题。
@@ -49,7 +49,7 @@ modinfo: 生成模块的具体版本信息
 - 内核模块是操作系统内核的一部分，运行在内核空间；应用程序在用户空间。
 - 内核模块被动调用，只在初始化和清除函数分别在被加载和被卸载时调用；应用程序则是顺序执行，或者在某一循环反复调用。
 - 内核函数在C库函数之下，不能调用；应用则在之上，可以调用。
-- 内核模块通常要做一些清除性质的工作，通常在擦欧总失败或者内核的清除函数中。
+- 内核模块通常要做一些清除性质的工作，通常在加载失败或者内核的清除函数中。
 - 内核模块如果发生非法访问，则整个系统可能都会崩溃。应用程序只会影响自己。
 - 内核的并发有很多，如中断、多处理器等；应用程序一般只考虑多线程或者多进程。
 - 内核空间一般只有4KB、8KB的栈，如果需要更大的内存空间，通常需要动态申请分配。
@@ -71,7 +71,7 @@ modinfo: 生成模块的具体版本信息
 
 事情多且复杂：工作队列
 
-新技术：thread_irq(针对多核设备，工作队列只能在单核运行，浪费CPU资源)
+新技术：thread_irq(针对多核设备，工作队列和tasklet只能在单核运行，浪费CPU资源)
 
 （hardwareirq,irq）同时注册在domain域中
 
@@ -79,13 +79,44 @@ modinfo: 生成模块的具体版本信息
 
 #### 疑问：如果一个硬件中断同时对应比如按键中断和外部输入中断，那么究竟是怎么详细区分的呢？
 
-答：载入每一个irq去执行去执行确定到底是哪一个（**但是概念很模糊啊，还是没搞清具体怎么判断**）。
-
-用kzalloc申请内存的时候， 效果等同于先是用 *kmalloc()* 申请空间 *,* 然后用 *memset()* 来初始化 *,*所有申请的元素都被初始化为 *0.*
+答：载入每一个irq去执行确定到底是哪一个（**但是概念很模糊啊，还是没搞清具体怎么判断**）。
 
 #### 异步通知
 
 ![image-20220804160358327](C:\Users\liujun\AppData\Roaming\Typora\typora-user-images\image-20220804160358327.png)
+
+### kzalloc/kmalloc/vmalloc
+
+```
+https://www.cnblogs.com/sky-heaven/p/7390370.html
+```
+
+用kzalloc申请内存的时候， 效果等同于先是用 *kmalloc()* 申请空间 *,* 然后用 *memset()* 来初始化 *,*所有申请的元素都被初始化为 *0.*
+
+kmalloc()、kzalloc()、vmalloc() 的共同特点是：
+
+1. 用于申请内核空间的内存；
+2. 内存以字节为单位进行分配；
+3. 所分配的内存虚拟地址上连续；
+
+kmalloc()、kzalloc()、vmalloc() 的区别是：
+
+1. kzalloc 是强制清零的 kmalloc 操作；（以下描述不区分 kmalloc 和 kzalloc）
+2. kmalloc 分配的内存大小有限制（128KB），而 vmalloc 没有限制；
+3. kmalloc 可以保证分配的内存物理地址是连续的，但是 vmalloc 不能保证；
+4. kmalloc 分配内存的过程可以是原子过程（使用 GFP_ATOMIC），而 vmalloc 分配内存时则可能产生阻塞；
+5. kmalloc 分配内存的开销小，因此 kmalloc 比 vmalloc 要快；
+
+一般情况下，内存只有在要被 DMA 访问的时候才需要物理上连续，但为了性能上的考虑，内核中一般使用 kmalloc()，而只有在需要获得大块内存时才使用 vmalloc()。例如，当模块被动态加载到内核当中时，就把模块装载到由 vmalloc() 分配的内存上。
+
+### fcntl/ioctl
+
+```
+http://blog.chinaunix.net/uid-21651676-id-60392.html
+https://www.cnblogs.com/kelamoyujuzhen/p/9688307.html
+```
+
+
 
 ### 自动加载&手动加载
 
@@ -114,7 +145,7 @@ https://www.linuxidc.com/Linux/2012-02/53701.htm#:~:text=containe,%E9%87%8F%E7%9
 https://www.cnblogs.com/xiaojiang1025/p/6193959.html
 ```
 
-​        **kset**表示一组**kobject**的集合，**kobject**通过**kset**组织成层次化的结构，所有属于该**kset**的**kobjetc**结构的**parent**指针指向**kset**包含的**kobject**对象，构成一个父子层次关系这些**kobject**可以是不同或相同的类型(kobj_type)。
+​        **kset**表示一组**kobject**的集合，**kobject**通过**kset**组织成层次化的结构，所有属于该**kset**的**kobject**结构的**parent**指针指向**kset**包含的**kobject**对象，构成一个父子层次关系这些**kobject**可以是不同或相同的类型(kobj_type)。
 
 ​        sysfs中的设备组织结构很大程度上都是根据**kset**进行组织的，比如**"/sys/drivers"**目录就是一个**kset**对象，包含系统中的驱动程序对应的目录，驱动程序的目录又kobject表示。
 
@@ -127,11 +158,27 @@ https://www.cnblogs.com/xiaojiang1025/p/6193959.html
 
 ​        其中kset里面有个：
 
-​        **list_head**还是那个用来挂在链表上的结构，包含在一个**kset**的所有kobject构成了一个**双向循环链表**，**list_head**就是这个链表的头部，这个链表用来连接第一个和最后一个kobject对象，第一个kobjetc使用entry连接kset集合以及第二个kobject对象，第二个kobject对象使用entry连接第一个kobject对象和第三个kobject对象，依次类推，最终形成一个kobject对象的链表。
+​        **list_head**还是那个用来挂在链表上的结构，包含在一个**kset**的所有kobject构成了一个**双向循环链表**，**list_head**就是这个链表的头部，这个链表用来连接第一个和最后一个kobject对象，第一个kobject使用entry连接kset集合以及第二个kobject对象，第二个kobject对象使用entry连接第一个kobject对象和第三个kobject对象，依次类推，最终形成一个kobject对象的链表。
 
 ![image-20220817103056518](C:\Users\liujun\AppData\Roaming\Typora\typora-user-images\image-20220817103056518.png)
 
 ### 互斥和同步
+
+1. 为什么自旋锁的临界区不能睡眠？
+2. arm 64处理器当中，我们如何实现独占访问内存。
+3. 排队自旋锁是如何实现MCS锁的？
+4. 乐观自旋锁等待的判断条件是什么？
+5. 请你说出MCS锁机制的实现原理？
+
+
+
+临界区（critical region）是指访问和操作共享数据的代码段，其中的资源无法同时被所得执行线程访问，访问临界区的执行线程或代码路径成为并发源。我们为了避免并发访问临界区，软件工程师必须保证访问临界区的原子性，即在临界区被不能有多个并发源同时执行，整个临界区就像一个不可分割的整体。
+
+在linux内核当中产生访问呢的并发源主要有：中断和异常、内核抢占、多处理器并发执行、软中断和tasklet。
+
+考虑SMP（Share memory processor）系统：
+
+- 同一类型的中断程序不会并发执行，但是不同类型的中断可能送达
 
 #### 中断屏蔽
 

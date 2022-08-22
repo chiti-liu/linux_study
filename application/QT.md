@@ -306,3 +306,4 @@ void Server::refresh_chart()
  	}
 ```
 
+串口（QSerialport）
