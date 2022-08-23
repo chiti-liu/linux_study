@@ -256,3 +256,10 @@ platform_driver
 ​				.compatible
 
 ​	(或者).id_table
+
+### struct inode 和struct file
+
+```
+https://www.cnblogs.com/QJohnson/archive/2011/06/24/2089414.html
+```
+
