@@ -263,3 +263,9 @@ platform_driver
 https://www.cnblogs.com/QJohnson/archive/2011/06/24/2089414.html
 ```
 
+### 设备树节点匹配platform_deivce和驱动
+
+```
+https://blog.csdn.net/Aa_lihua/article/details/106064773
+```
+
