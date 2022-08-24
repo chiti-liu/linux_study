@@ -269,3 +269,82 @@ https://www.cnblogs.com/QJohnson/archive/2011/06/24/2089414.html
 https://blog.csdn.net/Aa_lihua/article/details/106064773
 ```
 
+### &gpio*
+
+![image-20220824100806571](../typora-user-images/image-20220824100806571.png)
+
+dtc -I dtb -O dts *** .dtb > ***.dts反汇编
+
+![image-20220824100730798](../typora-user-images/image-20220824100730798.png)
+
+### 节点构造函数解析
+
+**注意：节点有关文件与操作，是重点**
+
+```
+https://deepinout.com/linux-kernel-api/device-driver-and-device-management/
+```
+
+#### register_chrdev(major,name"/proc/devices",file oerations *)
+
+函数**register_chrdev()**调用函数__register_chrdev()实现其功能，函数__register_chrdev()首先调用函数__register_chrdev_region()创建一个字符设备区，此设备区的主设备号相同，由函数register_chrdev()的第一个参数决定，次设备号的变化范围是0～256，设备区的名字为函数register_chrdev()的第二个参数，此函数将更改`/proc/devices`文件的内容；然后动态申请一个新的字符设备cdev结构体变量，对其部分字段进行初始化，初始化完成之后将其加入Linux内核系统中，即向Linux内核系统添加一个新的字符设备。函数register_chrdev()调用函数cdev_alloc()动态申请一个字符设备，调用函数cdev_add()将其加入Linux内核系统中。
+
+- 文件包含：#include <linux/fs.h>
+- int __register_chrdev(unsigned int major, unsigned int baseminor,
+  		      unsigned int count, const char *name,
+    		      const struct file_operations *fops)
+  - __register_chrdev_region(major, baseminor, count, name);
+  - cdev_alloc();
+  - kobject_set_name(&cdev->kobj, "%s", name);
+  - cdev_add(cdev, MKDEV(cd->major, baseminor), count);
+
+#### device_create(class,    ,MKDEV(),    ,name""/dev/name"")
+
+函数**device_create()**用于动态地创建逻辑设备，并对新的逻辑设备类进行相应的初始化，将其与此函数的第一个参数所代表的逻辑类关联起来，然后将此逻辑设备加到Linux内核系统的设备驱动程序模型中。函数能够自动地在`/sys/devices/virtual`目录下创建新的逻辑设备目录，在`/dev`目录下创建与逻辑类对应的设备文件。
+
+- 文件包含：#include <linux/device.h>
+
+- 定义
+
+  ```
+  struct device *device_create(struct class *cls, struct device *parent, dev_t devt, void *drvdata, const char *fmt, ...);
+  ```
+
+  
+
+#### class_create(MODULE,name"/sys/class/name")
+
+宏**class_create()**用于动态创建设备的逻辑类，并完成部分字段的初始化，然后将其添加进Linux内核系统中。此函数的执行效果就是在目录`/sys/class`下创建一个新的文件夹，此文件夹的名字为此函数的第二个输入参数，但此文件夹是空的。宏class_create()在实现时，调用了函数[__class_create](https://deepinout.com/linux-kernel-api/device-driver-and-device-management/linux-kernel-api__class_create.html)()，作用和函数__class_create()基本相同。
+
+- 文件包含：#include <linux/device.h>
+
+- 宏定义：
+
+  ```
+  #define class_create(owner, name)		\
+  ({						\
+  	static struct lock_class_key __key;	\
+  	__class_create(owner, name, &__key);	\
+  })	
+  ```
+
+  - 参数`owner`是一个struct module结构体类型的指针，指向函数__class_create()即将创建的struct class类型对象的拥有者，一般赋值为THIS_MODULE，此结构体的详细定义见文件linux-3.19.3/include/linux/module.h。
+  - 参数`name`是char类型的指针，代表即将创建的struct class变量的名字，用于给struct class的name字段赋值。
+
+### u-boot rk3399加载设备树
+
+```
+https://blog.csdn.net/sements/article/details/104795430
+```
+
+需要知道的一点是，在arm64架构下，linux已经弃用mach_xx等文件夹来描述板级信息供linux内核启动时去匹配根节点下的compatible属性来找到对应设备树。
+
+取而代之是单纯的接收bootloader传递过来的单一设备树文件dtb所在的内存地址。所以当多个dtb文件存在镜像中或者内存中时，如何找到需要的dtb的这个任务，就落在了bootloader肩上。
+
+
+### make menuconfig
+
+- Kconfig
+
+- Makefile
+- drv.c
