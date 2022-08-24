@@ -292,7 +292,7 @@ https://deepinout.com/linux-kernel-api/device-driver-and-device-management/
 - 文件包含：#include <linux/fs.h>
 - int __register_chrdev(unsigned int major, unsigned int baseminor,
   		      unsigned int count, const char *name,
-    		      const struct file_operations *fops)
+                		      const struct file_operations *fops)
   - __register_chrdev_region(major, baseminor, count, name);
   - cdev_alloc();
   - kobject_set_name(&cdev->kobj, "%s", name);
@@ -345,6 +345,19 @@ https://blog.csdn.net/sements/article/details/104795430
 ### make menuconfig
 
 - Kconfig
-
 - Makefile
-- drv.c
+- .config
+
+在drivers每个子目录下都有以上三项，作为make menuconfig的适配项，可以图形化配置，并且把子目录下的drv.c生成相应的.o/.ko文件等等，依据依赖可以重新编译内核，M编成模块自己添加，*直接编进内核，在/sys/class/dev中可以找到。
+
+当然，可以自己修改对应的Kconfig\Makefile文件自己生成menuconfig里面的项，不建议直接修改.config文件，如果有依赖的话，修改不成功。
+
+menuconfig 依据.config文件对内核进行选项配置。
+
+修改完后记得make ***_defconfig对应的文件需要被.config替换掉，注意名字不改改内容。
+
+![image-20220824202630177](../typora-user-images/image-20220824202630177.png)
+
+配置好记得save，再根据需要自己重新make ***_defconfig、编译内核
+
+其实就是把已经有的内核编译进去，适合批量编译和多依赖编译；少量模块完全可以自己交叉编译，生成模块然后insmod，当然，两个方法都要根据需要改设备树。
