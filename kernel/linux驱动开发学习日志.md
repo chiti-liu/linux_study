@@ -257,6 +257,124 @@ platform_driver
 
 ​	(或者).id_table
 
+### GPIO子系统常用函数
+
+gpio子系统对于驱动层的API位于“/kernel/include/linux/gpio.h”中。
+
+【1】检查gpio是否可用
+
+```
+int gpio_is_valid(int number); 
+参数/				含义
+number			gpio序号
+返回			可用返回true，不可用返回false
+```
+
+【2】申请使用一个gpio
+
+使用一个gpio前，必须向内核申请该gpio。
+
+```
+int gpio_request(unsigned gpio, const char *label)
+参数			含义
+gpio		待申请gpio序号
+label		gpio命名
+返回		成功返回0，失败返回负数
+```
+
+【3】释放已申请gpio
+
+  如果不使用该gpio，则需要释放，否则其他模块申请不到该gpio序号。
+
+```
+int gpio_free(unsigned gpio)
+参数		含义
+gpio	待释放gpio序号
+label	gpio命名
+```
+
+【4】设置gpio输入模式
+
+```
+int gpio_direction_input(unsigned gpio)
+参数			含义
+gpio		待设置gpio序号
+返回		成功返回0，失败返回负数
+```
+
+【5】设置gpio输出模式
+
+```
+void gpio_set_value(unsigned gpio, int value)
+参数		含义
+gpio	待设置gpio序号
+value	默认输出状态
+返回	成功返回0，失败返回负数
+```
+
+【6】读取 gpio状态
+
+```
+int gpio_get_value(unsigned int gpio)
+参数	含义
+gpio	待读取gpio序号
+返回	成功返回gpio状态（1/0），失败返回负数
+```
+
+【7】设置 gpio状态
+
+```
+void gpio_set_value(unsigned int gpio, int value)
+参数	含义
+gpio	待设置gpio序号
+value	待设置值
+```
+
+【8】中断号映射
+
+```
+int gpio_to_irq(unsigned gpio)
+参数	含义
+gpio	待设置gpio序号
+返回	成功返回中断号，失败返回负数
+```
+
+#### 应用
+
+利用pinctrl和gpio子系统实现一个io翻转控制LED。firefly-rk3399板子上有两个LED，分别是power led和user led。linux自带的“gpio-leds”驱动是在linux led框架的基础上实现的，我们使用user led的gpio口，不使用led框架，直接使用gpio子系统实现io输出状态控制和读取。
+
+-  修改设备树
+
+  【1】首先屏蔽rk3399原有的“led user”设备树，否则驱动会冲突。
+
+    leds {
+                compatible = "gpio-leds";
+                ......
+                /*user {
+                 *      label = "firefly:yellow:user";
+                 *      linux,default-trigger = "ir-user-click";
+                 *      gpios = <&gpio0 13 GPIO_ACTIVE_HIGH>;
+                 *      pinctrl-names = "default";
+                 *      pinctrl-0 = <&led_user>;
+                 *      default-state = "off";
+                 *};
+                 */
+        };
+  在“kernel/arch/arm64/boot/dts/rockchip/rk3399-firefly.dtsi”
+
+      gpiopin{
+                compatible = "gpiopin";	/*驱动兼容属性*/
+                gpios = <&gpio0 13 GPIO_ACTIVE_HIGH>;/* gpio描述，提供给pinctrl子系统使用*/
+                pinctrl-names = "default";	/*pin脚默认状态*/
+                pinctrl-0 = <&led_user>;	/*直接使用rk原命名的pin脚设备树,也可以单独重新命名*/
+                default-state = "off";		/*默认gpio输出0*/
+        };
+	#源自rk3399-firefly-port.dtsi
+	led_user: led-user {
+			rockchip,pins = <0 13 RK_FUNC_GPIO &pcfg_pull_none>;/*pin脚为普通gpio模式*/
+		};
+	};
+	  修改完设备树，可以编译内核，更新板子boot区域（内核和设备树文件）。
 ### struct inode 和struct file
 
 ```

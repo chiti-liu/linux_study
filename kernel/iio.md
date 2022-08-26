@@ -7,3 +7,28 @@ https://www.cnblogs.com/yongleili717/p/10744252.html
 https://www.21ic.com/article/833583.html
 ```
 
+以前的写法，就是驱动人员自己定义传感器数据的上报格式，自己定义的格式，那么久只有自己知道，自己编写应用。去诶单就是不灵活、封闭。没有一个标准，不统一。
+
+理想的驱动：
+
+黑匣子，应用通过统一模型直接读取到、人性化。
+
+### iio_dev
+
+devm_iio_device_alloc
+
+iio_device_alloc 
+
+​	 iio_priv
+
+​		iio_device_register
+
+- modes
+- name
+- channel
+
+​	表示传感器的每一个测量通道
+
+- info
+  - read_raw
+  - write_raw 
