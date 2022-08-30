@@ -1,6 +1,6 @@
 ## Linux系统编程
 
-### IPC（进程间通信）
+### POSIX（统一接口）
 
 ![image-20220827185604544](../typora-user-images/image-20220827185604544.png)
 
@@ -398,7 +398,7 @@ kill按进程号PID终止进程
 
 killall按照进程名称终止进程 例如： killall vim
 
- 
+### IPC（进程间通信） 
 
 \#### 进程间通信
 

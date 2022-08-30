@@ -88,6 +88,12 @@
 
 ### 所见即所得：
 
-launch.json实现了调试文件；task.json实现了不用手动编译就可以执行
+launch.json：调试文件；task.json：编译指令等集成在这里
+
+program：可执行文件linux默认为a.out，windows为*.exe
+
+preLaunchTask：launch.json对应tasks.json的label名字，调试工程前需要做的编译操作
 
 ![image-20220829174237882](../typora-user-images/image-20220829174237882.png)
+
+![image-20220830163934636](../typora-user-images/image-20220830163934636.png)

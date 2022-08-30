@@ -85,6 +85,20 @@ modinfo: 生成模块的具体版本信息
 
 ![image-20220804160358327](..\typora-user-images\image-20220804160358327.png)
 
+### 高端内存
+
+```
+https://www.jianshu.com/p/0b8e1879729a
+```
+
+当内核模块代码或线程访问内存时，代码中的内存地址都为逻辑地址，而对应到真正的物理内存地址，需要地址一对一的映射。
+
+32位Linux的虚拟地址空间也为0～4G，而内核空间只有1G，要想内核空间访问到所有的虚拟内存，需要一段空间来作为映射区域（中间桥梁、换算），临时占用一部分内存，等待用完释放，这也是线程的实现方式。
+
+![image-20220830143929882](../typora-user-images/image-20220830143929882.png)
+
+
+
 ### kzalloc/kmalloc/vmalloc
 
 ```
@@ -360,7 +374,7 @@ gpio	待设置gpio序号
                  *};
                  */
         };
-  在“kernel/arch/arm64/boot/dts/rockchip/rk3399-firefly.dtsi”
+	  在“kernel/arch/arm64/boot/dts/rockchip/rk3399-firefly.dtsi”
 
       gpiopin{
                 compatible = "gpiopin";	/*驱动兼容属性*/
