@@ -398,7 +398,7 @@ kill按进程号PID终止进程
 
 killall按照进程名称终止进程 例如： killall vim
 
-### IPC（进程间通信） 
+#### IPC（进程间通信） 
 
 \#### 进程间通信
 
@@ -842,4 +842,4 @@ int msgctl(int msgqid,int cmd,struct maqid_ds *buf)
 
 进程和信号的关系及处理逻辑？
 
-### Network（网络编程）
+#### Network（网络编程）

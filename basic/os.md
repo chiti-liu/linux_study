@@ -64,9 +64,127 @@ Intel X86通过int 80从用户态进入内核态
 
 进入IDT查表
 
+#### GDT和LDT
+
+```
+https://blog.csdn.net/darmao/article/details/78981649
+```
+
 ![image-20220830172843704](../typora-user-images/image-20220830172843704.png)
 
 ![image-20220830173835390](../typora-user-images/image-20220830173835390.png)
 
 ![image-20220830173917978](../typora-user-images/image-20220830173917978.png)
 
+### CPU管理
+
+进程控制块 PCB process control block
+
+线程控制块 TCB thread control block
+
+#### 进程管理
+
+![image-20220831104924047](../typora-user-images/image-20220831104924047.png)
+
+![image-20220831114320866](../typora-user-images/image-20220831114320866.png)
+
+具有就绪队列、等待（阻塞）队列
+
+#### 灵魂
+
+队列操作+调度+切换
+
+![image-20220831114634442](../typora-user-images/image-20220831114634442.png)
+
+- getnext调度
+  - fifo
+  - priority
+  - min_left_time
+  - min_task
+  - ......
+
+- switch_to切换
+  - 一般用汇编操作寄存器进行精细化操作
+
+![image-20220831130921944](../typora-user-images/image-20220831130921944.png)
+
+#### 线程管理
+
+- 用户级线程是内核级线程的子部分。
+
+- 用户级线程可以通过自己编写Yield实现线程切换，记得**保存PC等进入TCB中的STACK**。
+
+- 进程只有内核级，没有用户级，因为进程占有资源
+
+- 用户级线程：
+
+  - 可以实现在不支持线程的操作系统中实现
+
+  - 开销小,所以不需要线程回收
+
+  - 切换效率高（不需要上下文切换、陷入内核）
+
+  - 且允许每个进程都有自己定制的调度算法。
+
+  - **缺点**：
+
+  - 如何实现阻塞系统调用
+
+  - 缺页中断引起页面故障后直接阻塞直到磁盘I/O完成
+
+  - 阻塞后并不会切换其他线程、会一直占据（除非用时钟中断进入时间片轮转调度）一直到内核剥夺它的CPU或者它自己主动放弃（/滑稽）
+
+    另外线程本身也可能需要时钟中断，可能会扰乱运行时系统使用的时钟（切换开销）。
+
+- 内核级线程
+
+  - 在阻塞时，可以切换到就绪队列，运行统一进程中的其它线程或者不同进程中的线程
+  - 缺页中断内核会检查当前进程就绪队列找到就绪线程
+  - **缺点：**
+  - 开销大，所以需要线程回收
+
+![image-20220831144611611](../typora-user-images/image-20220831144611611.png)
+
+![image-20220831144819599](../typora-user-images/image-20220831144819599.png)
+
+![image-20220831144959657](../typora-user-images/image-20220831144959657.png)
+
+![image-20220831150608170](../typora-user-images/image-20220831150608170.png)
+
+![image-20220831170230198](../typora-user-images/image-20220831170230198.png)
+
+
+
+cmpl $0,state(%eax) 	//判断当前是否则塞，阻塞则重新分配
+
+cmpl $0,counter(%eax)	//判断时间片是否用光，用光了则重新分配
+
+![image-20220831170342248](../typora-user-images/image-20220831170342248.png)
+
+TR：段寄存器
+
+GDT：全局描述符表
+
+- ```
+  GDT可以被放在内存的任何位置，那么当程序员通过段寄存器来引用一个段描述符时，CPU必须知道GDT的入口，也就是基地址放在哪里，所以Intel的设计者门提供了一个寄存器GDTR用来存放GDT的入口地址，程序员将GDT设定在内存中某个位置之后，可以通过LGDT指令将GDT的入口地址装入此积存器，从此以后，CPU就根据此积存器中的内容作为GDT的入口来访问GDT了。
+  ```
+
+_TSS(n)找到下一个TCB切换到要运行的task
+
+![image-20220831172322984](../typora-user-images/image-20220831172322984.png)
+
+![image-20220831172520941](../typora-user-images/image-20220831172520941.png)
+
+![image-20220831173318105](../typora-user-images/image-20220831173318105.png)
+
+![image-20220831173934279](../typora-user-images/image-20220831173934279.png)
+
+![image-20220831175013064](../typora-user-images/image-20220831175013064.png)
+
+![image-20220831174653471](../typora-user-images/image-20220831174653471.png)
+
+![image-20220831174711083](../typora-user-images/image-20220831174711083.png)
+
+总结：
+
+![image-20220831174921634](../typora-user-images/image-20220831174921634.png)
