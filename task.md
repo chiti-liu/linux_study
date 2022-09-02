@@ -106,4 +106,11 @@
 
 #### 待完成：
 
-- 
+- 问题
+
+  - ```
+    WARNING: "fb_deferred_io_init" [/home/liujun/ftp_dir/st7735s/st7735s.ko] undefined!
+    WARNING: "fb_deferred_io_cleanup" [/home/liujun/ftp_dir/st7735s/st7735s.ko] undefined!
+    ```
+
+  - bootm之后联网异常，不从那bootm正常，下个礼拜把设备树改回去试一下。

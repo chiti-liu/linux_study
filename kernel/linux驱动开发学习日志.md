@@ -21,16 +21,17 @@ EXPORT_SYMBOL	//内部对变量或者函数可以让该函数或变量可以被�
 EXPORT_SYMBOL_GPL	//内部对变量或者函数可以让该函数或变量可以被其他模块使用（申明了GPL协议）的使用
 ```
 
-#### 疑问：static不是可以限制函数或者变量只可以在当前文件中吗？为什么依然可以EXPORT_SYMBOL申明为外部，那这样申明有意义吗？只为了在某个文件中使用？
+#### 疑问：`static`不是可以限制函数或者变量只可以在当前文件中吗？为什么依然可以`EXPORT_SYMBOL`申明为外部，那这样申明有意义吗？只为了在某个文件中使用？
 
-答：Linux-2.6之后默认不导出所有的符号，所以使用EXPORT_SYMBOL() 做标记。static增加可读性。EXPORT_SYMBOL标签内定义的函数或者符号对全部内核代码公开，不用修改内核代码就可以在内核模块中直接调用，
-即使用EXPORT_SYMBOL可以将一个函数以符号的方式导出给其他模块使用。
+答：`Linux-2.6`之后默认不导出所有的符号，所以使用`EXPORT_SYMBOL()` 做标记。static增加可读性。`EXPORT_SYMBOL`标签内定义的函数或者符号对全部内核代码公开，不用修改内核代码就可以在内核模块中直接调用，
+即使用`EXPORT_SYMBOL`可以将一个函数以符号的方式导出给其他模块使用。
 符号的意思就是函数的入口地址，或者说是把这些符号和对应的地址保存起来的，在内核运行的过程中，可以找到这些符号对应的地址的。
 
-EXPORT_SYMBOL使用方法
-        1. 在模块函数定义之后使用EXPORT_SYMBOL（函数名）
-                2.在调用该函数的模块中使用extern对要使用的符号或者函数进行声明
-                  3.首先加载定义该函数的模块，再加载调用该函数的模块
+`EXPORT_SYMBOL`使用方法
+
+1. 在模块函数定义之后使用`EXPORT_SYMBOL`（函数名）
+2. 用该函数的模块中使用`extern`对要使用的符号或者函数进行声明
+3. 首先加载定义该函数的模块，再加载调用该函数的模块
 
 ```
 modprobe优于insmod: 自动加载被依赖的模块，insmod要注意自己模块加载的先后可能导致的问题。
@@ -52,8 +53,8 @@ modinfo: 生成模块的具体版本信息
 - 内核模块通常要做一些清除性质的工作，通常在加载失败或者内核的清除函数中。
 - 内核模块如果发生非法访问，则整个系统可能都会崩溃。应用程序只会影响自己。
 - 内核的并发有很多，如中断、多处理器等；应用程序一般只考虑多线程或者多进程。
-- 内核空间一般只有4KB、8KB的栈，如果需要更大的内存空间，通常需要动态申请分配。
-- printk不能打印浮点类型，否则编译时会出警告，并且模块加载不会成功。
+- 内核空间一般只有4KB、8KB的栈，如果需要更大的内存空间，通常需要动态申请（`vmalloc\kmalloc`）分配。
+- `printk`不能打印浮点类型，否则编译时会出警告，并且模块加载不会成功。
 
 ### 中断
 
@@ -67,13 +68,13 @@ modinfo: 生成模块的具体版本信息
 
 软件中断技术：
 
-事情不是太长：tasklet
+事情不是太长：`tasklet`
 
 事情多且复杂：工作队列
 
-新技术：thread_irq(针对多核设备，工作队列和tasklet只能在单核运行，浪费CPU资源)
+新技术：`thread_irq(`针对多核设备，工作队列和`tasklet`只能在单核运行，浪费CPU资源)
 
-（hardwareirq,irq）同时注册在domain域中
+（`hardwareirq,irq`）同时注册在domain域中
 
 ![image-20220804111804080](..\typora-user-images\image-20220804111804080.png)
 
@@ -107,27 +108,33 @@ https://www.cnblogs.com/sky-heaven/p/7390370.html
 
 用kzalloc申请内存的时候， 效果等同于先是用 *kmalloc()* 申请空间 *,* 然后用 *memset()* 来初始化 *,*所有申请的元素都被初始化为 *0.*
 
-kmalloc()、kzalloc()、vmalloc() 的共同特点是：
+`kmalloc()、kzalloc()、vmalloc()` 的共同特点是：
 
 1. 用于申请内核空间的内存；
 2. 内存以字节为单位进行分配；
 3. 所分配的内存虚拟地址上连续；
 
-kmalloc()、kzalloc()、vmalloc() 的区别是：
+`kmalloc()、kzalloc()、vmalloc()` 的区别是：
 
 1. kzalloc 是强制清零的 kmalloc 操作；（以下描述不区分 kmalloc 和 kzalloc）
 2. kmalloc 分配的内存大小有限制（128KB），而 vmalloc 没有限制；
 3. kmalloc 可以保证分配的内存物理地址是连续的，但是 vmalloc 不能保证；
-4. kmalloc 分配内存的过程可以是原子过程（使用 GFP_ATOMIC），而 vmalloc 分配内存时则可能产生阻塞；
+4. kmalloc 分配内存的过程可以是原子过程（使用 `GFP_ATOMIC`），而 vmalloc 分配内存时则可能产生阻塞；
 5. kmalloc 分配内存的开销小，因此 kmalloc 比 vmalloc 要快；
 
-一般情况下，内存只有在要被 DMA 访问的时候才需要物理上连续，但为了性能上的考虑，内核中一般使用 kmalloc()，而只有在需要获得大块内存时才使用 vmalloc()。例如，当模块被动态加载到内核当中时，就把模块装载到由 vmalloc() 分配的内存上。
+一般情况下，内存只有在要被 DMA 访问的时候才需要物理上连续，但为了性能上的考虑，内核中一般使用 kmalloc()，而只有在需要获得**大块内存**时才使用 vmalloc()。例如，当模块被**动态加载**到内核当中时，就把模块装载到由 vmalloc() 分配的内存上。
 
 ### fcntl/ioctl
 
 ```
 http://blog.chinaunix.net/uid-21651676-id-60392.html
 https://www.cnblogs.com/kelamoyujuzhen/p/9688307.html
+```
+
+### dup
+
+```
+https://www.cnblogs.com/pengdonglin137/p/3286627.html
 ```
 
 
@@ -166,7 +173,7 @@ https://www.cnblogs.com/xiaojiang1025/p/6193959.html
 
 ​        **kset**表示一组**kobject**的集合，**kobject**通过**kset**组织成层次化的结构，所有属于该**kset**的**kobject**结构的**parent**指针指向**kset**包含的**kobject**对象，构成一个父子层次关系这些**kobject**可以是不同或相同的类型(kobj_type)。
 
-​        sysfs中的设备组织结构很大程度上都是根据**kset**进行组织的，比如**"/sys/drivers"**目录就是一个**kset**对象，包含系统中的驱动程序对应的目录，驱动程序的目录又kobject表示。
+​        sysfs中的设备组织结构很大程度上都是根据**kset**进行组织的，比如**"/sys/drivers"**目录就是一个**kset**对象，包含系统中的驱动程序对应的目录，驱动程序的目录由kobject表示。
 
 ​        比如在平台设备模型中，当我们注册一个设备或驱动到平台总线，其实是将对应的**kobject**挂接到platform总线的**kset**上，每种总线都是维护两条链表(两个kset)，一条用于链接挂接在上面的驱动(驱动kset)，一条用于链接挂接在上面的设备(设备kset)。
 
@@ -193,7 +200,7 @@ https://www.cnblogs.com/xiaojiang1025/p/6193959.html
 
 临界区（critical region）是指访问和操作共享数据的代码段，其中的资源无法同时被所得执行线程访问，访问临界区的执行线程或代码路径成为并发源。我们为了避免并发访问临界区，软件工程师必须保证访问临界区的原子性，即在临界区被不能有多个并发源同时执行，整个临界区就像一个不可分割的整体。
 
-在linux内核当中产生访问呢的并发源主要有：中断和异常、内核抢占、多处理器并发执行、软中断和tasklet。
+在linux内核当中产生访问的并发源主要有：中断和异常、内核抢占、多处理器并发执行、软中断和tasklet。
 
 考虑SMP（Share memory processor）系统：
 
@@ -493,3 +500,49 @@ menuconfig 依据.config文件对内核进行选项配置。
 配置好记得save，再根据需要自己重新make ***_defconfig、编译内核
 
 其实就是把已经有的内核编译进去，适合批量编译和多依赖编译；少量模块完全可以自己交叉编译，生成模块然后insmod，当然，两个方法都要根据需要改设备树。
+
+### gpio&gpiod
+
+之前旧的方式从dts获取gpio，基本都要用of函数，现在新的方式（大约4.4之后）可以直接使用“gpiod_”开头的函数。
+
+```
+https://zhuanlan.zhihu.com/p/115657651
+```
+
+- devm_gpiod_get_optional
+  - devm_gpiod_get_index_optional
+    - devm_gpiod_get_index
+      - gpiod_get_index
+
+- gpiod_get
+  - gpiod_get_index
+
+```
+struct gpio_desc *__must_check gpiod_get_index(struct device *dev,
+					       const char *con_id,
+					       unsigned int idx,
+					       enum gpiod_flags flags)
+/* 	获取GPIO，可以得到一系列GPIO设备描述符
+ *	例：
+ *	dev_desc = gpiod_get(&dev, "dc", GPIOD_OUT_HIGH);
+ *	对应dts:
+ *	dc-gpios = <SPI 124 0>;
+ *	con_id在这里为dc
+ *	idx可以自己设置序列完成设备描述符的获取
+ *	flags并不重要，后面自己可以根据需要gpiod_set_value（dev_desc，0/1）
+ *	或者可以获取flags,然后设置有效位???
+ */
+```
+
+
+
+### mmap
+
+关键是共享和私有
+
+- ioremap实现了内核的空间映射，在内核层file_operations.mmap里面`virt_to_phys(kernel_buf)`让用户层通过`buf=mmap(NULL, 1024*8, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)`操作buf数据
+
+```
+
+```
+
