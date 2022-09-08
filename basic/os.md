@@ -143,6 +143,10 @@ https://blog.csdn.net/darmao/article/details/78981649
   - **缺点：**
   - 开销大，所以需要线程回收
 
+子进程fork创建返回值为0，父进程返回非0
+
+![image-20220908175649109](../typora-user-images/image-20220908175649109.png)
+
 ![image-20220831144611611](../typora-user-images/image-20220831144611611.png)
 
 ![image-20220831144819599](../typora-user-images/image-20220831144819599.png)
@@ -173,7 +177,9 @@ _TSS(n)找到下一个TCB切换到要运行的task
 
 ![image-20220831172322984](../typora-user-images/image-20220831172322984.png)
 
-![image-20220831172520941](../typora-user-images/image-20220831172520941.png)
+![image-20220908173631401](../typora-user-images/image-20220908173631401.png)
+
+eip=int 80	;在iret的下一句
 
 ![image-20220831173318105](../typora-user-images/image-20220831173318105.png)
 
@@ -188,3 +194,21 @@ _TSS(n)找到下一个TCB切换到要运行的task
 总结：
 
 ![image-20220831174921634](../typora-user-images/image-20220831174921634.png)
+
+
+
+
+
+
+
+### 进程通信
+
+```
+https://blog.csdn.net/qq_19018277/article/details/98446415
+```
+
+#### 共享存储
+
+#### 管道通信
+
+#### 消息传递

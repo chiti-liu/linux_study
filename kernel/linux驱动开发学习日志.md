@@ -23,13 +23,13 @@ EXPORT_SYMBOL_GPL	//内部对变量或者函数可以让该函数或变量可以
 
 #### 疑问：`static`不是可以限制函数或者变量只可以在当前文件中吗？为什么依然可以`EXPORT_SYMBOL`申明为外部，那这样申明有意义吗？只为了在某个文件中使用？
 
-答：`Linux-2.6`之后默认不导出所有的符号，所以使用`EXPORT_SYMBOL()` 做标记。static增加可读性。`EXPORT_SYMBOL`标签内定义的函数或者符号对全部内核代码公开，不用修改内核代码就可以在内核模块中直接调用，
-即使用`EXPORT_SYMBOL`可以将一个函数以符号的方式导出给其他模块使用。
+答：`Linux-2.6`之后默认**不导出**所有的符号，所以使用`EXPORT_SYMBOL()` 做标记。static增加可读性。`EXPORT_SYMBOL`标签内定义的函数或者符号对全部内核代码公开，不用修改内核代码就可以在内核模块中直接调用，
+即使用`EXPORT_SYMBOL`可以将一个函数/变量以符号的方式导出给其他模块使用。
 符号的意思就是函数的入口地址，或者说是把这些符号和对应的地址保存起来的，在内核运行的过程中，可以找到这些符号对应的地址的。
 
 `EXPORT_SYMBOL`使用方法
 
-1. 在模块函数定义之后使用`EXPORT_SYMBOL`（函数名）
+1. 在模块函数定义之后使用`EXPORT_SYMBOL`（函数/变量名）
 2. 用该函数的模块中使用`extern`对要使用的符号或者函数进行声明
 3. 首先加载定义该函数的模块，再加载调用该函数的模块
 
@@ -546,3 +546,26 @@ struct gpio_desc *__must_check gpiod_get_index(struct device *dev,
 
 ```
 
+### 内核打印信息
+
+```
+echo "7 4 1 7" > /proc/sys/kernel/printk
+```
+
+![image-20220908143348071](../typora-user-images/image-20220908143348071.png)
+
+![image-20220908143546789](../typora-user-images/image-20220908143546789.png)
+
+![image-20220908143454742](../typora-user-images/image-20220908143454742.png)
+
+![image-20220908145125262](../typora-user-images/image-20220908145125262.png)
+
+### 内核模块外部修改参数
+
+![image-20220908150857366](../typora-user-images/image-20220908150857366.png)
+
+![image-20220908151034379](../typora-user-images/image-20220908151034379.png)
+
+![image-20220908151723245](../typora-user-images/image-20220908151723245.png)
+
+![image-20220908151630052](../typora-user-images/image-20220908151630052.png)
