@@ -1,4 +1,6 @@
-
+```
+https://juejin.cn/post/7139543023557279780
+```
 
 make可以找出修改过的文件，根据依赖关系，找出受影响的文件，最后根据规则单独编译这些文件。
 
@@ -103,3 +105,55 @@ obj-m	+= st7735s.o
 
 - `CFLAGS_obj.o += -DCONFIG_FB_DEFERRED_IO`往自己的中添加宏定义
 - `EXTRA_CFLAGS += -DCONFIG_FB_DEFERRED_IO`全局宏定义
+
+
+
+默认变量
+
+默认变量是Makefile的约定，比如：
+
+```bash
+test:   $(CC) -o test test.c
+复制代码
+```
+
+其中CC就是一个默认变量，在linux下就是编译器cc。其它比较常用的默认变量如下：
+
+关于命令相关的变量
+
+- `AR` : 函数库打包程序。默认命令是 `ar`
+- `AS` : 汇编语言编译程序。默认命令是 `as`
+- `CC` : C语言编译程序。默认命令是 `cc`
+- `CXX` : C++语言编译程序。默认命令是 `g++`
+- `CO` : 从 RCS文件中扩展文件程序。默认命令是 `co`
+- `CPP` : C程序的预处理器（输出是标准输出设备）。默认命令是 `$(CC) –E`
+- `FC` : Fortran 和 Ratfor 的编译器和预处理程序。默认命令是 `f77`
+- `GET` : 从SCCS文件中扩展文件的程序。默认命令是 `get`
+- `LEX` : Lex方法分析器程序（针对于C或Ratfor）。默认命令是 `lex`
+- `PC` : Pascal语言编译程序。默认命令是 `pc`
+- `YACC` : Yacc文法分析器（针对于C程序）。默认命令是 `yacc`
+- `YACCR` : Yacc文法分析器（针对于Ratfor程序）。默认命令是 `yacc –r`
+- `MAKEINFO` : 转换Texinfo源文件（.texi）到Info文件程序。默认命令是 `makeinfo`
+- `TEX` : 从TeX源文件创建TeX DVI文件的程序。默认命令是 `tex`
+- `TEXI2DVI` : 从Texinfo源文件创建TeX DVI 文件的程序。默认命令是 `texi2dvi`
+- `WEAVE` : 转换Web到TeX的程序。默认命令是 `weave`
+- `CWEAVE` : 转换C Web 到 TeX的程序。默认命令是 `cweave`
+- `TANGLE` : 转换Web到Pascal语言的程序。默认命令是 `tangle`
+- `CTANGLE` : 转换C Web 到 C。默认命令是 `ctangle`
+- `RM` : 删除文件命令。默认命令是 `rm –f`
+
+关于命令参数的变量
+
+- `ARFLAGS` : 函数库打包程序AR命令的参数。默认值是 `rv`
+- `ASFLAGS` : 汇编语言编译器参数。（当明显地调用 `.s` 或 `.S` 文件时）
+- `CFLAGS` : C语言编译器参数。
+- `CXXFLAGS` : C++语言编译器参数。
+- `COFLAGS` : RCS命令参数。
+- `CPPFLAGS` : C预处理器参数。（ C 和 Fortran 编译器也会用到）。
+- `FFLAGS` : Fortran语言编译器参数。
+- `GFLAGS` : SCCS “get”程序参数。
+- `LDFLAGS` : 链接器参数。（如： `ld` ）
+- `LFLAGS` : Lex文法分析器参数。
+- `PFLAGS` : Pascal语言编译器参数。
+- `RFLAGS` : Ratfor 程序的Fortran 编译器参数。
+- `YFLAGS` : Yacc文法分析器参数
