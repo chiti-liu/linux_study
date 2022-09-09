@@ -1,24 +1,44 @@
 ### Application
 
 - QT
+- projects
+  - dht11
+  - st7735s
+
 
 ### Basic
 
+- algorithm
 - asm
-- cmake
-- git
-- makefile
+- C
+- C++
+- C高级运用.ximd
+- communication protocol note
+- data structure
+- hardware maintenance
 - network
 - os
-- shell
+- study_basic_book.jpg
+- 软件小概念.ximd
 
 ### boards
 
+- imx6ul
+  - freescale
+
 - rk3399
+  - 临滴
+
+
+### Frame
+
+- ARM
+- 架构.ximd
 
 ### kernel
 
 - iio
+- LCD
 - linux驱动学习日志
 - pci
 - usb
@@ -34,6 +54,16 @@
 ### system
 
 - linux system programming
+
+### Tools
+
+- build essential
+- camke
+- gdb
+- git
+- makefile
+- shell
+- vs code
 
 ### typora-user-images
 
