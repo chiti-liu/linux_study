@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "oled_bmp.h": "c",
+        "oled_font.h": "c",
+        "oled_api.h": "c",
+        "stdlib.h": "c"
+    }
+}

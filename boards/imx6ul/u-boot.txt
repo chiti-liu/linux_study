@@ -1,0 +1,36 @@
+=> print
+baudrate=115200
+board_name=EVK
+board_rev=14X14
+bootcmd=if test ${bootdev} = sd1; then run erase_env;mmc dev 0;if fatload mmc 0:1 83200000 target/env.txt;then echo burn default env from sdcard......;setenv_sdcard mmc 0:1 83200000 target/env.txt;fi;echo update firmware.........;run update_from_sd;else echo nand boot..........;run nandargs;run bootnand; run bootnandbak; fi;
+bootcmd_mfg=run erase_env;run setenv_mfgtool;run mfgtool_args;bootz ${loadaddr} ${initrd_addr} ${fdt_addr};
+bootdelay=1
+bootdev=mmc2
+bootnand=nand read ${loadaddr} ${nand_image} 0x800000;nand read ${fdt_addr} ${nand_addr} 0x40000;bootz ${loadaddr} - ${fdt_addr};
+bootnandbak=nand read ${loadaddr} ${nand_image} 0x800000;nand read ${fdt_addr} ${nand_addr} 0x40000;bootz ${loadaddr} - ${fdt_addr};
+calibrate=y
+console=ttymxc0
+env_addr=0x83200000
+erase_env=nand erase 0x600000 0x100000;
+eth1addr=a6:53:1d:87:ce:40
+ethact=FEC0
+ethaddr=5a:a4:53:1d:87:ce
+ethprime=FEC
+fdt_addr=0x83000000
+fdt_file=imx6ul-14x14-evk-c2-emmc.dtb
+fdt_high=0xffffffff
+fl_wdt_en=0
+fl_wdt_timeout=128
+initrd_addr=0x83800000
+initrd_high=0xffffffff
+loadaddr=0x80800000
+mfgtool_args=setenv bootargs console=${console},${baudrate} rdinit=/linuxrc g_mass_storage.stall=0 g_mass_storage.removable=1 g_mass_storage.file=/fat g_mass_storage.ro=1 g_mass_storage.idVendor=0x066F g_mass_storage.idProduct=0x37FF g_mass_storage.iSerialNumber="" clk_ignore_unused
+nand_addr=0x700000
+nand_image=0xa00000
+nandargs=setenv bootargs console=ttymxc0,115200  cma=96M root=/dev/mtdblock5 rw rootfstype=yaffs2, calibrate=${calibrate}
+panel=TFT70AB-1024x600
+setenv_mfgtool=setenv_mfgtools ${env_addr} 2000 ;
+splashimage=0x83800000
+splashpos=m,m
+update_from_sd=run update_nand;
+update_nand=mmc rescan;fatload mmc 0 ${loadaddr} /sdrun/zImage; fatload mmc 0 ${initrd_addr} /sdrun/ramdisk.img.u; fatload mmc 0 ${fdt_addr} /sdrun/imx6ul-14x14-evk.dtb; setenv bootargs console=${console},${baudrate} rdinit=/linuxrc; cma=96M bootz ${loadaddr} ${initrd_addr} ${fdt_addr};

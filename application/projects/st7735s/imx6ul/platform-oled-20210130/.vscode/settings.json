@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "oled_api.h": "c",
+        "types.h": "c",
+        "oled_device.h": "c"
+    }
+}

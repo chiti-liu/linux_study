@@ -1,0 +1,107 @@
+
+/*
+ * Copyright (C) 2016 Freescale Semiconductor, Inc.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+
+#include "imx6ul-14x14-evk.dts"
+
+&sim2 {
+	status = "disabled";
+};
+&csi {
+        status = "disabled";
+};
+
+&ov9650 {
+        status = "disabled";
+};
+
+
+
+&ecspi1 {
+        fsl,spi-num-chipselects = <1>;
+        cs-gpios = <&gpio4 26 0>;
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_ecspi1 &pinctrl_ecspi1_cs>;
+        status = "okay";
+	
+	spidev@0{
+                compatible = "spidev";
+                spi-max-frequency = <20000000>;
+                reg = <0>;
+        };
+	
+};
+
+&iomuxc {
+	imx6ul-evk {
+		pinctrl_ecspi1: ecspi1grp {
+                         fsl,pins = <
+                                MX6UL_PAD_CSI_DATA07__ECSPI1_MISO   0x100b1
+                                MX6UL_PAD_CSI_DATA06__ECSPI1_MOSI   0x100b1
+                                MX6UL_PAD_CSI_DATA04__ECSPI1_SCLK   0x100b1
+                         >;
+                };
+                pinctrl_ecspi1_cs: ecspi1_csgrp {
+                         fsl,pins = <
+                                MX6UL_PAD_CSI_DATA05__GPIO4_IO26   0x100b1
+                         >;
+                };		
+	};
+};
+
+&ecspi1 {
+	status = "okay";
+	st7735s: st7735s@00{
+		compatible = "st7735s";
+		reg = <0x00>;
+		spi-max-frequency = <48000000>;
+		reset-gpios = <&gpio4 23 GPIO_ACTIVE_LOW>;/* GPIO4_C2 */	
+		dc-gpios = <&gpio4 24 GPIO_ACTIVE_HIGH>;/* GPIO4_C6 */	//description
+		pinctrl-names = "default";
+		pinctrl-0 = <&st7735s_reset &st7735s_dc>;/*be careful of different api invoke in source files*/
+		};
+};
+&iomuxc {
+	imx6ul-evk {
+		pinctrl_ecspi1: ecspi1grp {
+                         fsl,pins = <
+                                MX6UL_PAD_CSI_DATA07__ECSPI1_MISO   0x100b1
+                                MX6UL_PAD_CSI_DATA06__ECSPI1_MOSI   0x100b1
+                                MX6UL_PAD_CSI_DATA04__ECSPI1_SCLK   0x100b1
+                         >;
+                };
+                pinctrl_ecspi1_cs: ecspi1_csgrp {
+                         fsl,pins = <
+                                MX6UL_PAD_CSI_DATA05__GPIO4_IO26   0x100b1
+                         >;
+                };
+		st7735s {
+			st7735s_reset: st7735s-reset {
+				fsl,pins = <
+                                MX6UL_PAD_CSI_DATA05__GPIO4_IO26   0x100b1
+                         >;
+			};
+			st7735s_dc: st7735s-dc {
+			fsl,pins = <
+                                MX6UL_PAD_CSI_DATA05__GPIO4_IO26   0x100b1
+                         >;
+			};
+		};				
+	};
+};
+&pinctrl {
+	st7735s {
+		st7735s_reset: st7735s-reset {
+			rockchip,pins = <4 1 RK_FUNC_GPIO &pcfg_pull_up>;
+		};
+		st7735s_dc: st7735s-dc {
+			rockchip,pins = <4 2 RK_FUNC_GPIO &pcfg_pull_up>;//configure
+		};
+	};
+};
+
