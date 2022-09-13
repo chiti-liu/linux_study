@@ -426,7 +426,7 @@ https://deepinout.com/linux-kernel-api/device-driver-and-device-management/
 
 #### register_chrdev(major,name"/proc/devices",file oerations *)
 
-函数**register_chrdev()**调用函数__register_chrdev()实现其功能，函数__register_chrdev()首先调用函数__register_chrdev_region()创建一个字符设备区，此设备区的主设备号相同，由函数register_chrdev()的第一个参数决定，次设备号的变化范围是0～256，设备区的名字为函数register_chrdev()的第二个参数，此函数将更改`/proc/devices`文件的内容；然后动态申请一个新的字符设备cdev结构体变量，对其部分字段进行初始化，初始化完成之后将其加入Linux内核系统中，即向Linux内核系统添加一个新的字符设备。函数register_chrdev()调用函数cdev_alloc()动态申请一个字符设备，调用函数cdev_add()将其加入Linux内核系统中。
+函数register_chrdev()调用函数register_chrdev()实现其功能，函数register_chrdev()首先调用函数__register_chrdev_region()创建一个字符设备区，此设备区的主设备号相同，由函数register_chrdev()的第一个参数决定，次设备号的变化范围是0～256，设备区的名字为函数register_chrdev()的第二个参数，此函数将更改`/proc/devices`文件的内容；然后动态申请一个新的字符设备cdev结构体变量，对其部分字段进行初始化，初始化完成之后将其加入Linux内核系统中，即向Linux内核系统添加一个新的字符设备。函数register_chrdev()调用函数cdev_alloc()动态申请一个字符设备，调用函数cdev_add()将其加入Linux内核系统中。
 
 - 文件包含：#include <linux/fs.h>
 - int __register_chrdev(unsigned int major, unsigned int baseminor,
@@ -569,3 +569,80 @@ echo "7 4 1 7" > /proc/sys/kernel/printk
 ![image-20220908151723245](../typora-user-images/image-20220908151723245.png)
 
 ![image-20220908151630052](../typora-user-images/image-20220908151630052.png)
+
+### 调试GPIO
+
+```
+cat /sys/kernel/debug/gpio
+```
+
+### pinfunc.h
+
+#### IOMUXC chapter30
+
+```
+IOMUXC P30章节
+	IOMUXC_SW_MUX_CTL_PAD_<PAD_NAME>  	//定义引脚复用属性
+	IOMUXC_SW_PAD_CTL_PAD_<PAD_NAME>	//定义引脚电气属性
+	SELECT_INPUT
+```
+
+![image-20220913165220162](../typora-user-images/image-20220913165220162.png)
+
+```
+mux_ctrl_ofs:复用节点偏移地址MUX_CTL_PAD_
+pad_ctrl_ofs:引脚偏移地址PAD_CTL_PAD_
+sel_input_ofs:输入引脚引用的偏移地址SELECT_INPUT
+mux_mode:复用功能MUX_CTL_PAD_
+sel_input:输入引脚引用的源脚SELECT_INPUT
+```
+
+
+
+![image-20220913171701537](../typora-user-images/image-20220913171701537.png)
+
+![image-20220913171725131](../typora-user-images/image-20220913171725131.png)
+
+![image-20220913171742345](../typora-user-images/image-20220913171742345.png)
+
+#### GPIO chapter 26
+
+![image-20220913172008929](../typora-user-images/image-20220913172008929.png)
+
+
+
+下面寄存器中除了CR1和CR2，都是某位对应族中某个GPIO
+
+- DR 	数据寄存器    
+
+  ![image-20220913173223692](../typora-user-images/image-20220913173223692.png)
+
+- GDIR 方向寄存器    设置输入0输出1 
+
+  ![image-20220913173157161](../typora-user-images/image-20220913173157161.png)
+
+- PSR    状态寄存器    读取某个GPIO，和输入状态下的DR类似
+
+  ![image-20220913173048246](../typora-user-images/image-20220913173048246.png)
+
+-  接下来看ICR1和ICR2这两个寄存器，都是中断控制寄存器，ICR1用于配置低16个GPIO， ICR2 用于配置高 16 个 GPIO
+
+  ![image-20220913172543975](../typora-user-images/image-20220913172543975.png)
+
+- IMR     中断屏蔽寄存器    屏蔽某个GPIO中断某位 置1
+
+![image-20220913172726002](../typora-user-images/image-20220913172726002.png)
+
+- ISR      中断状态寄存器   某个GPIO发生中断某位 置1
+
+  ![image-20220913172854480](../typora-user-images/image-20220913172854480.png)
+
+-  EDGE_SEL 边沿选择寄存器 覆盖 ICR1 和 ICR2 的设置 某位置1则为双边沿触发
+
+  ![image-20220913173612617](../typora-user-images/image-20220913173612617.png)
+
+#### Clock chapter 18
+
+- CCM_CCGR0  时钟使能  两位对应一个外设
+
+![image-20220913174352924](../typora-user-images/image-20220913174352924.png)
