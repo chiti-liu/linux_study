@@ -1,48 +1,10 @@
-=> print
-baudrate=115200
-board_name=EVK
-board_rev=14X14
-bootcmd=if test ${bootdev} = sd1; then run erase_env;mmc dev 0;if fatload mmc 0:1 83200000 target/env.txt;then echo burn default env from sdcard......;setenv_sdcard mmc 0:1 83200000 target/env.txt;fi;echo update firmware.........;run update_from_sd;else echo nand boot..........;run nandargs;run bootnand; run bootnandbak; fi;
-bootcmd_mfg=run erase_env;run setenv_mfgtool;run mfgtool_args;bootz ${loadaddr} ${initrd_addr} ${fdt_addr};
-bootdelay=1
-bootdev=mmc2
-bootnand=nand read ${loadaddr} ${nand_image} 0x800000;nand read ${fdt_addr} ${nand_addr} 0x40000;bootz ${loadaddr} - ${fdt_addr};
-bootnandbak=nand read ${loadaddr} ${nand_image} 0x800000;nand read ${fdt_addr} ${nand_addr} 0x40000;bootz ${loadaddr} - ${fdt_addr};
-calibrate=y
-console=ttymxc0
-env_addr=0x83200000
-erase_env=nand erase 0x600000 0x100000;
-eth1addr=a6:53:1d:87:ce:40
-ethact=FEC0
-ethaddr=5a:a4:53:1d:87:ce
-ethprime=FEC
-fdt_addr=0x83000000
-fdt_file=imx6ul-14x14-evk-c2-emmc.dtb
-fdt_high=0xffffffff
-fl_wdt_en=0
-fl_wdt_timeout=128
-initrd_addr=0x83800000
-initrd_high=0xffffffff
-loadaddr=0x80800000
-mfgtool_args=setenv bootargs console=${console},${baudrate} rdinit=/linuxrc g_mass_storage.stall=0 g_mass_storage.removable=1 g_mass_storage.file=/fat g_mass_storage.ro=1 g_mass_storage.idVendor=0x066F g_mass_storage.idProduct=0x37FF g_mass_storage.iSerialNumber="" clk_ignore_unused
-nand_addr=0x700000
-nand_image=0xa00000
-nandargs=setenv bootargs console=ttymxc0,115200  cma=96M root=/dev/mtdblock5 rw rootfstype=yaffs2, calibrate=${calibrate}
-panel=TFT70AB-1024x600
-setenv_mfgtool=setenv_mfgtools ${env_addr} 2000 ;
-splashimage=0x83800000
-splashpos=m,m
-update_from_sd=run update_nand;
-update_nand=mmc rescan;fatload mmc 0 ${loadaddr} /sdrun/zImage; fatload mmc 0 ${initrd_addr} /sdrun/ramdisk.img.u; fatload mmc 0 ${fdt_addr} /sdrun/imx6ul-14x14-evk.dtb; setenv bootargs console=${console},${baudrate} rdinit=/linuxrc; cma=96M bootz ${loadaddr} ${initrd_addr} ${fdt_addr};
 
-
-dmesg
 
 Booting Linux on physical CPU 0x0
 Initializing cgroup subsys cpuset
 Initializing cgroup subsys cpu
 Initializing cgroup subsys cpuacct
-Linux version 4.1.15 (root@forlinx-virtual-machine) (gcc version 5.3.0 (GCC) ) #2 SMP PREEMPT Mon Sep 12 11:34:45 CST 2022
+Linux version 4.1.15-00023-gd55d28b (zhangpan@developer-RH2485-V2) (gcc version 5.3.0 (GCC) ) #1 SMP PREEMPT Mon Apr 25 13:30:26 CST 2022
 CPU: ARMv7 Processor [410fc075] revision 5 (ARMv7), cr=10c53c7d
 CPU: PIPT / VIPT nonaliasing data cache, VIPT aliasing instruction cache
 Machine model: Freescale i.MX6 UltraLite 14x14 EVK Board
@@ -50,11 +12,11 @@ Reserved memory: failed to allocate memory for node 'linux,cma'
 cma: Reserved 96 MiB at 0x8a000000
 Memory policy: Data cache writealloc
 On node 0 totalpages: 61440
-free_area_init_node: node 0, pgdat 80e59f40, node_mem_map 89d87000
+free_area_init_node: node 0, pgdat 80e51f40, node_mem_map 89d87000
   Normal zone: 576 pages used for memmap
   Normal zone: 0 pages reserved
   Normal zone: 61440 pages, LIFO batch:15
-PERCPU: Embedded 12 pages/cpu @89d60000 s17356 r8192 d23604 u49152
+PERCPU: Embedded 12 pages/cpu @89d61000 s17356 r8192 d23604 u49152
 pcpu-alloc: s17356 r8192 d23604 u49152 alloc=12*4096
 pcpu-alloc: [0] 0
 Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 60864
@@ -62,7 +24,7 @@ Kernel command line: console=ttymxc0,115200 cma=96M root=/dev/mtdblock5 rw rootf
 PID hash table entries: 1024 (order: 0, 4096 bytes)
 Dentry cache hash table entries: 32768 (order: 5, 131072 bytes)
 Inode-cache hash table entries: 16384 (order: 4, 65536 bytes)
-Memory: 129364K/245760K available (10179K kernel code, 516K rwdata, 3512K rodata, 456K init, 472K bss, 18092K reserved, 98304K cma-reserved, 0K highmem)
+Memory: 129404K/245760K available (10155K kernel code, 516K rwdata, 3504K rodata, 456K init, 471K bss, 18052K reserved, 98304K cma-reserved, 0K highmem)
 Virtual kernel memory layout:
     vector  : 0xffff0000 - 0xffff1000   (   4 kB)
     fixmap  : 0xffc00000 - 0xfff00000   (3072 kB)
@@ -70,10 +32,10 @@ Virtual kernel memory layout:
     lowmem  : 0x80000000 - 0x90000000   ( 256 MB)
     pkmap   : 0x7fe00000 - 0x80000000   (   2 MB)
     modules : 0x7f000000 - 0x7fe00000   (  14 MB)
-      .text : 0x80008000 - 0x80d6723c   (13693 kB)
-      .init : 0x80d68000 - 0x80dda000   ( 456 kB)
-      .data : 0x80dda000 - 0x80e5b140   ( 517 kB)
-       .bss : 0x80e5e000 - 0x80ed4008   ( 473 kB)
+      .text : 0x80008000 - 0x80d5f044   (13661 kB)
+      .init : 0x80d60000 - 0x80dd2000   ( 456 kB)
+      .data : 0x80dd2000 - 0x80e53140   ( 517 kB)
+       .bss : 0x80e56000 - 0x80ecbe08   ( 472 kB)
 SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
 Preemptible hierarchical RCU implementation.
         Additional per-CPU info printed with stalls.
@@ -119,7 +81,7 @@ cpuidle: using governor menu
 hw-breakpoint: found 5 (+1 reserved) breakpoint and 4 watchpoint registers.
 hw-breakpoint: maximum watchpoint size is 8 bytes.
 imx6ul-pinctrl 20e0000.iomuxc: initialized IMX pinctrl driver
-raid6: int32x1  gen()    59 MB/s
+raid6: int32x1  gen()    60 MB/s
 raid6: int32x1  xor()    45 MB/s
 raid6: int32x2  gen()    78 MB/s
 raid6: int32x2  xor()    48 MB/s
@@ -180,11 +142,14 @@ imx-weim 21b8000.weim: Driver registered.
 backlight supply power not found, using dummy regulator
 MIPI DSI driver module loaded
 MIPI DSI driver module loaded
+21c8000.lcdif supply lcd not found, using dummy regulator
+mxsfb 21c8000.lcdif: failed to find mxc display driver
+mxsfb 21c8000.lcdif: initialized
 imx-sdma 20ec000.sdma: no event needs to be remapped
 imx-sdma 20ec000.sdma: loaded firmware 3.3
 imx-sdma 20ec000.sdma: initialized
 has none gpio
-2020000.serial: ttymxc0 at MMIO 0x2020000 (irq = 21, base_baud = 5000000) is a IMX
+2020000.serial: ttymxc0 at MMIO 0x2020000 (irq = 20, base_baud = 5000000) is a IMX
 console [ttymxc0] enabled
 imx sema4 driver is registered.
 [drm] Initialized drm 1.1.0 20060810
@@ -207,7 +172,6 @@ Creating 6 MTD partitions on "gpmi-nand":
 0x000000a00000-0x000001200000 : "kernel"
 0x000001200000-0x000010000000 : "rootfs"
 gpmi-nand 1806000.gpmi-nand: driver registered.
-spi_imx: probe of 2008000.ecspi failed with error -22
 CAN device driver interface
 2188000.ethernet supply phy not found, using dummy regulator
 pps pps0: new PPS source ptp0
@@ -250,7 +214,7 @@ hub 1-0:1.0: 1 port detected
 mousedev: PS/2 mouse device common for all mice
 > GTP driver installing...
 > GTP Driver Version: V2.4<2014/11/28>
-> GTP Driver Built@03:34:23, Sep 12 2022
+> GTP Driver Built@05:30:03, Apr 25 2022
 > GTP I2C Address: 0x5d
 0-005d supply vdd_ana not found, using dummy regulator
 0-005d supply vcc_i2c not found, using dummy regulator
@@ -330,33 +294,33 @@ platform caam_sm: blkkey_ex: 8 keystore units available
 platform caam_sm: 64-bit clear key:
 platform caam_sm: [0000] 00 01 02 03 04 0f 06 07
 platform caam_sm: 64-bit black key:
-platform caam_sm: [0000] d7 3e a6 7f 0f 23 ba c5
-platform caam_sm: [0008] fc 6a 59 3d 50 af 59 53
+platform caam_sm: [0000] 69 0c 9c b7 96 5d 32 6b
+platform caam_sm: [0008] 66 18 62 32 48 50 99 d7
 platform caam_sm: 128-bit clear key:
 platform caam_sm: [0000] 00 01 02 03 04 0f 06 07
 platform caam_sm: [0008] 08 09 0a 0b 0c 0d 0e 0f
 platform caam_sm: 128-bit black key:
-platform caam_sm: [0000] 91 9b 4b 8e c4 c6 a9 aa
-platform caam_sm: [0008] fa 0d 03 c5 82 3c 50 28
+platform caam_sm: [0000] 39 d7 24 56 78 51 1b 09
+platform caam_sm: [0008] 8d 47 ad 9f 60 af 7d 44
 platform caam_sm: 192-bit clear key:
 platform caam_sm: [0000] 00 01 02 03 04 0f 06 07
 platform caam_sm: [0008] 08 09 0a 0b 0c 0d 0e 0f
 platform caam_sm: [0016] 10 11 12 13 14 15 16 17
 platform caam_sm: 192-bit black key:
-platform caam_sm: [0000] b2 6f fe 2a 32 ec ff ad
-platform caam_sm: [0008] a9 a1 7f af 1c b6 c5 ac
-platform caam_sm: [0016] 6c e6 6c 30 93 61 0f 6c
-platform caam_sm: [0024] 49 61 42 43 ff 0c b5 8a
+platform caam_sm: [0000] b7 92 95 99 e1 3c 05 3a
+platform caam_sm: [0008] 6b 11 2a c7 3e 53 43 bb
+platform caam_sm: [0016] 1a f5 e8 d5 ce fd 90 d1
+platform caam_sm: [0024] 58 5e de bf 66 8f 46 32
 platform caam_sm: 256-bit clear key:
 platform caam_sm: [0000] 00 01 02 03 04 0f 06 07
 platform caam_sm: [0008] 08 09 0a 0b 0c 0d 0e 0f
 platform caam_sm: [0016] 10 11 12 13 14 15 16 17
 platform caam_sm: [0024] 18 19 1a 1b 1c 1d 1e 1f
 platform caam_sm: 256-bit black key:
-platform caam_sm: [0000] 38 ea 07 f0 ff 5a 70 05
-platform caam_sm: [0008] 85 06 e3 c9 2d 7c 30 fb
-platform caam_sm: [0016] 07 53 ed b3 c7 ec d0 fe
-platform caam_sm: [0024] f0 e3 8b b0 18 fe d6 ee
+platform caam_sm: [0000] e9 7b 6f 33 00 44 99 a4
+platform caam_sm: [0008] e1 95 aa 79 bf 71 75 4d
+platform caam_sm: [0016] b1 0a 68 3e f2 fe d7 6f
+platform caam_sm: [0024] c7 2b e4 75 58 c9 db 53
 platform caam_sm: 64-bit unwritten blob:
 platform caam_sm: [0000] 00 00 00 00 00 00 00 00
 platform caam_sm: [0008] 00 00 00 00 00 00 00 00
@@ -410,73 +374,73 @@ platform caam_sm: [0072] 00 00 00 00 00 00 00 00
 platform caam_sm: [0080] 00 00 00 00 00 00 00 00
 platform caam_sm: [0088] 00 00 00 00 00 00 00 00
 platform caam_sm: 64-bit black key in blob:
-platform caam_sm: [0000] ec 64 f7 c6 ab 07 42 68
-platform caam_sm: [0008] 90 24 83 ee 77 31 1b 0a
-platform caam_sm: [0016] 17 14 37 99 54 85 38 5e
-platform caam_sm: [0024] e0 3e 8a 35 cd c5 66 8e
-platform caam_sm: [0032] a1 5e a6 d6 dc d6 44 28
-platform caam_sm: [0040] 3c 04 2e 93 1c ec af d5
-platform caam_sm: [0048] e2 53 fe 4c f4 32 6b f0
+platform caam_sm: [0000] 75 95 9a fd 7e ce 6a 6f
+platform caam_sm: [0008] 05 0f 01 2d 2a c1 64 7b
+platform caam_sm: [0016] 4f 94 09 e2 63 f7 83 f4
+platform caam_sm: [0024] f1 37 65 3a 0c 57 f3 20
+platform caam_sm: [0032] 3a fd 33 a1 d5 c0 8e 1d
+platform caam_sm: [0040] fb 9e 72 d8 0c 22 a7 a8
+platform caam_sm: [0048] 85 d1 0a be 22 af 0a 84
 platform caam_sm: [0056] 00 00 00 00 00 00 00 00
 platform caam_sm: [0064] 00 00 00 00 00 00 00 00
 platform caam_sm: [0072] 00 00 00 00 00 00 00 00
 platform caam_sm: [0080] 00 00 00 00 00 00 00 00
 platform caam_sm: [0088] 00 00 00 00 00 00 00 00
 platform caam_sm: 128-bit black key in blob:
-platform caam_sm: [0000] 39 6b e0 90 77 bd bf a5
-platform caam_sm: [0008] 1b 74 6c 5b 66 e9 17 d8
-platform caam_sm: [0016] 1e cc b8 46 78 e5 bd 6a
-platform caam_sm: [0024] b4 8b 7a 12 15 5e 60 97
-platform caam_sm: [0032] 74 ab 8b 2d 4c 40 81 ac
-platform caam_sm: [0040] 5b 7c 77 2f 74 c1 55 3c
-platform caam_sm: [0048] 91 80 4a d7 3f b0 be 40
-platform caam_sm: [0056] 9a 90 09 cf fa c8 f2 59
+platform caam_sm: [0000] b8 02 7a b2 69 2a e0 e4
+platform caam_sm: [0008] 18 9e 53 73 a1 b2 31 34
+platform caam_sm: [0016] 34 ef ba f1 7b c3 ba 75
+platform caam_sm: [0024] b2 08 e0 a2 8f bf 2d 26
+platform caam_sm: [0032] ee 92 37 1a 5f ea 1d cd
+platform caam_sm: [0040] 6a b6 bc c0 a4 0e c8 80
+platform caam_sm: [0048] fd ac cd 50 d7 17 54 7c
+platform caam_sm: [0056] 00 53 6c e8 f2 ec 4d 81
 platform caam_sm: [0064] 00 00 00 00 00 00 00 00
 platform caam_sm: [0072] 00 00 00 00 00 00 00 00
 platform caam_sm: [0080] 00 00 00 00 00 00 00 00
 platform caam_sm: [0088] 00 00 00 00 00 00 00 00
 platform caam_sm: 192-bit black key in blob:
-platform caam_sm: [0000] a0 5c 2f e3 58 64 d0 a4
-platform caam_sm: [0008] e7 01 ed 19 01 c1 fd 52
-platform caam_sm: [0016] f4 c9 87 73 31 18 74 98
-platform caam_sm: [0024] f5 b8 09 8e 5e 73 5c 68
-platform caam_sm: [0032] 05 8b c7 9b 33 4f 00 db
-platform caam_sm: [0040] cd 6f 2e f1 94 a3 65 95
-platform caam_sm: [0048] e1 8f 7e f9 cc b2 2d c2
-platform caam_sm: [0056] a6 15 dd e1 14 1a 73 73
-platform caam_sm: [0064] 7b 3d 51 5d a4 eb f3 90
+platform caam_sm: [0000] 86 d4 7e 67 cc 08 47 74
+platform caam_sm: [0008] 38 90 6e 08 66 37 7c e4
+platform caam_sm: [0016] 86 af 49 bf 89 b6 55 72
+platform caam_sm: [0024] f4 98 48 5f ff b4 21 b1
+platform caam_sm: [0032] de 87 9a 18 f2 51 fb 9d
+platform caam_sm: [0040] 0c 55 d5 fb 42 d1 97 bc
+platform caam_sm: [0048] ab 52 24 1f af 14 ea 28
+platform caam_sm: [0056] 84 e3 26 f0 b9 73 c2 65
+platform caam_sm: [0064] d6 e8 fe 28 bb 83 98 75
 platform caam_sm: [0072] 00 00 00 00 00 00 00 00
 platform caam_sm: [0080] 00 00 00 00 00 00 00 00
 platform caam_sm: [0088] 00 00 00 00 00 00 00 00
 platform caam_sm: 256-bit black key in blob:
-platform caam_sm: [0000] 4c f2 2a 33 7a 94 ea 46
-platform caam_sm: [0008] 52 b4 43 84 0e 62 1a 69
-platform caam_sm: [0016] b1 60 9d 2e d9 59 9e 70
-platform caam_sm: [0024] 6d 0f 04 3a ae 0a 3b 67
-platform caam_sm: [0032] 4d a8 66 3c ce 90 0f 8f
-platform caam_sm: [0040] 0b 91 ac b7 0b 16 42 42
-platform caam_sm: [0048] 2f 3b 47 9f 61 fc d4 92
-platform caam_sm: [0056] bc fd 13 04 ea bb 12 11
-platform caam_sm: [0064] 24 86 13 5e e5 e9 f0 59
-platform caam_sm: [0072] ea 64 b2 b9 7f 95 80 e8
+platform caam_sm: [0000] a1 98 f5 01 84 49 5a ad
+platform caam_sm: [0008] 6a 8c 32 60 8a 5a ba e4
+platform caam_sm: [0016] 11 7a 4d de 9d 1c 61 94
+platform caam_sm: [0024] 4c fa 54 80 0e b6 03 96
+platform caam_sm: [0032] 13 a5 7a 35 ef a3 33 56
+platform caam_sm: [0040] 98 24 43 ec 73 a0 be 57
+platform caam_sm: [0048] 84 73 b9 03 f3 46 b7 f8
+platform caam_sm: [0056] 62 3e 62 78 80 f7 09 e3
+platform caam_sm: [0064] 8e d4 82 e7 f2 7e c4 60
+platform caam_sm: [0072] b8 6a b7 48 0e f4 b8 61
 platform caam_sm: [0080] 00 00 00 00 00 00 00 00
 platform caam_sm: [0088] 00 00 00 00 00 00 00 00
 platform caam_sm: restored 64-bit black key:
-platform caam_sm: [0000] 16 ac a8 84 97 92 07 35
-platform caam_sm: [0008] dc b1 74 57 10 22 7c 49
+platform caam_sm: [0000] af a4 13 a8 ca 45 24 4e
+platform caam_sm: [0008] d7 12 75 10 fb 9e 6b eb
 platform caam_sm: restored 128-bit black key:
-platform caam_sm: [0000] 91 9b 4b 8e c4 c6 a9 aa
-platform caam_sm: [0008] fa 0d 03 c5 82 3c 50 28
+platform caam_sm: [0000] 39 d7 24 56 78 51 1b 09
+platform caam_sm: [0008] 8d 47 ad 9f 60 af 7d 44
 platform caam_sm: restored 192-bit black key:
-platform caam_sm: [0000] b2 6f fe 2a 32 ec ff ad
-platform caam_sm: [0008] a9 a1 7f af 1c b6 c5 ac
-platform caam_sm: [0016] 70 e8 8e 42 f1 0d b6 14
-platform caam_sm: [0024] de 21 1c 55 07 7f 70 a1
+platform caam_sm: [0000] b7 92 95 99 e1 3c 05 3a
+platform caam_sm: [0008] 6b 11 2a c7 3e 53 43 bb
+platform caam_sm: [0016] 83 9e 8c 73 4e 2a be 31
+platform caam_sm: [0024] ba 56 d6 f8 40 7c 21 b7
 platform caam_sm: restored 256-bit black key:
-platform caam_sm: [0000] 38 ea 07 f0 ff 5a 70 05
-platform caam_sm: [0008] 85 06 e3 c9 2d 7c 30 fb
-platform caam_sm: [0016] 07 53 ed b3 c7 ec d0 fe
-platform caam_sm: [0024] f0 e3 8b b0 18 fe d6 ee
+platform caam_sm: [0000] e9 7b 6f 33 00 44 99 a4
+platform caam_sm: [0008] e1 95 aa 79 bf 71 75 4d
+platform caam_sm: [0016] b1 0a 68 3e f2 fe d7 6f
+platform caam_sm: [0024] c7 2b e4 75 58 c9 db 53
 snvs-secvio 20cc000.caam-snvs: can't get snvs clock
 snvs-secvio 20cc000.caam-snvs: violation handlers armed - non-secure state
 usbcore: registered new interface driver usbhid
@@ -517,7 +481,7 @@ Bluetooth: HIDP socket layer initialized
 Key type dns_resolver registered
 Btrfs loaded
 dhd_module_init in
-rtc-rx8010 0-0032: setting system clock to 2019-04-26 21:36:12 UTC (1556314572)
+rtc-rx8010 0-0032: setting system clock to 2019-04-26 21:44:20 UTC (1556315060)
 gpio_dvfs: disabling
 vref-3v3: disabling
 usb_otg1_vbus: disabling
@@ -537,9 +501,8 @@ yaffs: 1310 blocks to be sorted...
 yaffs: yaffs_read_super: is_checkpointed 0
 VFS: Mounted root (yaffs2 filesystem) on device 31:5.
 devtmpfs: mounted
-Freeing unused kernel memory: 456K (80d68000 - 80dda000)
+Freeing unused kernel memory: 456K (80d60000 - 80dd2000)
 udevd[172]: starting version 3.1.5
-pxp-v4l2 pxp_v4l2: failed to call pxp_set_fbinfo
 fec 2188000.ethernet eth0: Freescale FEC PHY driver [Micrel KSZ8081 or KSZ8091] (mii_bus:phy_addr=2188000.ethernet:01, irq=-1)
 IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
 fec 2188000.ethernet eth0: Link is Up - 100Mbps/Full - flow control rx/tx
