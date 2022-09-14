@@ -103,3 +103,36 @@ bootm_headers_t
 
 ![image-20220823145116646](../typora-user-images/image-20220823145116646.png)
 
+### u-boot启动流程及分析
+
+在此之前通过rom初始化好DDR、SP等？
+
+然后进行中断向量表的初始化
+
+### u-boot源码分析
+
+1. 因为uboot会使用到一些经过编译才生成的文件，因此我们在分析uboot的时候，需要先编译一下uboot。
+
+2. arch/arm/cpu/u-boot.lds就是整个uboot的链接脚本，u-boot目录下的lds文件就是根据其生成的
+
+3. board/freescale/mx6ul_14x14_evk 重点
+
+4. configs 目录是uboot的默认配置文件目录。此目录下都是以defconfig结尾的，这些配置文件对应不同的板子。
+
+5. net主要是tftp\nfs等
+
+6. 移植uboot时重点关注
+
+   board/freescale/
+
+   configs/*defconfig
+
+7. 执行`make  *defconfig`生成.config，替换成对应目录下的`*defconfig`，里面有详细的uboot配置
+
+8. 顶层README非常重要，需要读一下
+
+9. 顶层Makefile
+
+   ![image-20220914172912490](../typora-user-images/image-20220914172912490.png)
+
+#### 顶层Makefile

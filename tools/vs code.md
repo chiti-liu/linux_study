@@ -88,6 +88,8 @@
 
 ### 所见即所得：
 
+settings.json：设置哪些文件可以搜索和显示，可以参考正点原子教程
+
 launch.json：调试文件；task.json：编译指令等集成在这里
 
 program：可执行文件linux默认为a.out，windows为*.exe

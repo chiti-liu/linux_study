@@ -646,3 +646,65 @@ sel_input:输入引脚引用的源脚SELECT_INPUT
 - CCM_CCGR0  时钟使能  两位对应一个外设
 
 ![image-20220913174352924](../typora-user-images/image-20220913174352924.png)
+
+### unable to handle kernel paging request at preempt   kernel oops   Segment user
+
+1. 内存访问出错，用了空指针，指针越界
+2. 试图修改const变量
+3. 仔细分析一下例如include/asm-arm/arch-s3c2410/map.h这个文件，就知道这个文件定义了许多硬件的物理地址和虚拟地址，如果虚拟地址分配时重复，则会导致硬件请求虚拟地址不成功
+
+```
+https://blog.csdn.net/dearbaba_1666/article/details/80610945
+https://www.zhihu.com/question/530997689
+
+```
+
+addr2line、gdb、objdump三种方法
+
+```
+https://linux-kernel-labs.github.io/refs/heads/master/lectures/debugging.html#decoding-an-oops-panic
+```
+
+- addr2line：定位到出错的文件和行
+- objdump：反汇编定义到发生位置前后
+- gdb：自己去调式发生错误所在位置
+
+**注意：还有另一种Segment kernel  调式方式不一样**
+
+### Sparse
+
+```
+# define __user		__attribute__((noderef, address_space(1)))
+# define __kernel	__attribute__((address_space(0)))
+# define __safe		__attribute__((safe))
+# define __force	__attribute__((force))
+# define __nocast	__attribute__((nocast))
+# define __iomem	__attribute__((noderef, address_space(2)))
+# define __must_hold(x)	__attribute__((context(x,1,1)))
+# define __acquires(x)	__attribute__((context(x,0,1)))
+# define __releases(x)	__attribute__((context(x,1,0)))
+# define __acquire(x)	__context__(x,1)
+# define __release(x)	__context__(x,-1)
+# define __cond_lock(x,c)	((c) ? ({ __acquire(x); 1; }) : 0)
+# define __percpu	__attribute__((noderef, address_space(3)))
+# define __rcu		__attribute__((noderef, address_space(4)))
+# define __private	__attribute__((noderef))
+```
+
+```
+https://blog.csdn.net/Rong_Toa/article/details/86585086
+```
+
+### _pa & _va
+
+```
+https://www.cnblogs.com/liuhailong0112/p/14465697.html
+```
+
+```
+#define __pa(x) __virt_to_phys((unsigned long)(x)) //还能展开
+#define __pa(x) __virt_to_phys((unsigned long)(x)) 
+```
+
+
+
