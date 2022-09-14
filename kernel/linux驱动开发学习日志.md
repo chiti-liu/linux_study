@@ -706,5 +706,18 @@ https://www.cnblogs.com/liuhailong0112/p/14465697.html
 #define __pa(x) __virt_to_phys((unsigned long)(x)) 
 ```
 
+### 设备树与gpiod_set_value内核的匹配
 
+移植st7735s时发现的问题：电平一直不对，set_value和实测值相反，只有dc引脚设置对应到了，然后对比了一下dc引脚和cs、rst引脚，发现设备树上如下的第三个参数有差别。
 
+```
+cs-gpios = <&gpio3 26 GPIO_ACTIVE_LOW>;
+
+reset-gpios = <&gpio4 23 GPIO_ACTIVE_LOW>；
+
+dc-gpios = <&gpio4 24 GPIO_ACTIVE_HIGH>;
+```
+
+都修改成HIGH后正常，不过图形显示还是有bug，全屏显示出现segmentation fault ，oops  虚拟地址访问出错？
+
+![image-20220914233731585](../typora-user-images/image-20220914233731585.png)
