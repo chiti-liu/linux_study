@@ -136,3 +136,30 @@ bootm_headers_t
    ![image-20220914172912490](../typora-user-images/image-20220914172912490.png)
 
 #### 顶层Makefile
+
+```
+$(MAKE)	 -c SUB_DIR	//到指定子文件夹中make，即嵌套
+export VARIBLE	//导出变量给子目录
+SHELL和MAKEFLAGS这两个变量除非使用unexport声明，否则始终贯穿传递所有子文件
+```
+
+![image-20220915112623080](../typora-user-images/image-20220915112623080.png)
+
+```
+make *defconfig
+```
+
+![image-20220915145711412](../typora-user-images/image-20220915145711412.png)
+
+```
+make
+```
+
+![image-20220915150046030](../typora-user-images/image-20220915150046030.png)
+
+```
+bootz:zImage 
+bootm/i:uImage
+```
+
+![image-20220915160243196](../typora-user-images/image-20220915160243196.png)

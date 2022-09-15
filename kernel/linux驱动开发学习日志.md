@@ -285,7 +285,7 @@ gpio子系统对于驱动层的API位于“/kernel/include/linux/gpio.h”中。
 【1】检查gpio是否可用
 
 ```
-int gpio_is_valid(int number); 
+int gpiod_is_valid(int number); 
 参数/				含义
 number			gpio序号
 返回			可用返回true，不可用返回false
@@ -296,7 +296,7 @@ number			gpio序号
 使用一个gpio前，必须向内核申请该gpio。
 
 ```
-int gpio_request(unsigned gpio, const char *label)
+int gpiod_request(unsigned gpio, const char *label)
 参数			含义
 gpio		待申请gpio序号
 label		gpio命名
@@ -308,7 +308,7 @@ label		gpio命名
   如果不使用该gpio，则需要释放，否则其他模块申请不到该gpio序号。
 
 ```
-int gpio_free(unsigned gpio)
+int gpiod_put(unsigned gpio)
 参数		含义
 gpio	待释放gpio序号
 label	gpio命名
@@ -317,7 +317,7 @@ label	gpio命名
 【4】设置gpio输入模式
 
 ```
-int gpio_direction_input(unsigned gpio)
+int gpiod_direction_input(unsigned gpio)
 参数			含义
 gpio		待设置gpio序号
 返回		成功返回0，失败返回负数
@@ -326,7 +326,7 @@ gpio		待设置gpio序号
 【5】设置gpio输出模式
 
 ```
-void gpio_set_value(unsigned gpio, int value)
+int gpiod_direction_output(unsigned gpio, int value)
 参数		含义
 gpio	待设置gpio序号
 value	默认输出状态
@@ -336,7 +336,7 @@ value	默认输出状态
 【6】读取 gpio状态
 
 ```
-int gpio_get_value(unsigned int gpio)
+int gpiod_get_value(unsigned int gpio)
 参数	含义
 gpio	待读取gpio序号
 返回	成功返回gpio状态（1/0），失败返回负数
@@ -345,7 +345,7 @@ gpio	待读取gpio序号
 【7】设置 gpio状态
 
 ```
-void gpio_set_value(unsigned int gpio, int value)
+void gpiod_set_value(unsigned int gpio, int value)
 参数	含义
 gpio	待设置gpio序号
 value	待设置值
@@ -513,6 +513,11 @@ https://zhuanlan.zhihu.com/p/115657651
   - devm_gpiod_get_index_optional
     - devm_gpiod_get_index
       - gpiod_get_index
+
+
+```
+命名需要为*-gpios
+```
 
 - gpiod_get
   - gpiod_get_index
@@ -706,7 +711,7 @@ https://www.cnblogs.com/liuhailong0112/p/14465697.html
 #define __pa(x) __virt_to_phys((unsigned long)(x)) 
 ```
 
-### 设备树与gpiod_set_value内核的匹配
+### *-gpios & gpiod_set_value
 
 移植st7735s时发现的问题：电平一直不对，set_value和实测值相反，只有dc引脚设置对应到了，然后对比了一下dc引脚和cs、rst引脚，发现设备树上如下的第三个参数有差别。
 
@@ -721,3 +726,32 @@ dc-gpios = <&gpio4 24 GPIO_ACTIVE_HIGH>;
 都修改成HIGH后正常，不过图形显示还是有bug，全屏显示出现segmentation fault ，oops  虚拟地址访问出错？
 
 ![image-20220914233731585](../typora-user-images/image-20220914233731585.png)
+
+### 内核从设备树获取属性&节点
+
+首先翻译内核的dtb文件，然后对节点进行适配性匹配，最后配置属性值。
+
+```
+https://blog.csdn.net/thisway_diy/article/details/84336817//原理
+https://www.cnblogs.com/TaXueWuYun/p/15389889.html	//API
+```
+
+开发板中，/sys/firmware/fdt查看原始dtb文件
+
+ /sys/firmware/devicetree // 以目录结构程现的dtb文件, 根节点对应base目录, 每一个节点对应一个目录, 每一个属性对应一个文件
+比如查看 #address-cells 的16进制
+hexdump -C “#address-cells”
+查看compatible
+
+```
+cat compatible
+```
+
+
+
+如果你在设备树设备节点中设置一个错误的中断属性，那么就导致led对应的平台设备节点没办法创建
+ /sys/devices/platform // 系统中所有的platform_device, 有来自设备树的, 也有来自.c文件中注册的
+
+对于来自设备树的platform_device, 可以进入 /sys/devices/platform/<设备名>/of_node 查看它的设备树属性
+
+d. /proc/device-tree 是链接文件, 指向 /sys/firmware/devicetree/base
