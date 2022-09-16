@@ -545,11 +545,52 @@ struct gpio_desc *__must_check gpiod_get_index(struct device *dev,
 
 关键是共享和私有
 
-- ioremap实现了内核的空间映射，在内核层file_operations.mmap里面`virt_to_phys(kernel_buf)`让用户层通过`buf=mmap(NULL, 1024*8, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)`操作buf数据
+- ioremap在应用层实现了内核的空间映射，在内核层file_operations.mmap里面`virt_to_phys(kernel_buf)`让应用层层通过`buf=mmap(NULL, 1024*8, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)`操作buf数据。
 
+  
+
+`\#include <sys/mman.h>`
+
+```
+void *mmap(void *addr, size_t length, int prot, int flags,
+        int fd, off_t offset);
+int munmap(void *addr, size_t length);
+```
+
+mmap实现了将设备驱动在内核空间的部分地址**直接映射**到用户空间，使得用户程序可以**直接访问和操作**相应的内容。**减少了额外的拷贝**，而一般的read，write函数虽然表面上直接向设备写入，其实**还需要进行一次拷贝**。
+
+```
+https://blog.csdn.net/manshq163com/article/details/18451135
 ```
 
 ```
+mmap
+void *mmap(void *addr, size_t length, int prot, int flags,
+        int fd, off_t offset);
+```
+
+把文件或者设备映射到内存。
+
+这个函数在调用进程的虚拟地址空间中创建一块映射区域。
+
+**这个函数返回新创建的页面的地址。**
+
+映射区域的首地址在addr中指定，length指定映射区域的长度。如果addr是NULL，那么**由内核来选择一个地址**来创建映射的区域,否则创建的时候会尽可能地使用addr的地址。在linux系统中，创建映射的时候应该是在下一个页面的边界创建,**addr是NULL的时候，程序的可移植性最好**。
+length指定文件被映射的长度。
+
+offset指定从文件的哪个偏移位置开始映射**，offset必须是页面大小的整数倍**，页面的大小可以由`sysconf(_SC_PAGE_SIZE)`来返回。
+prot指定内存的保护模式（具体参见man）。
+flags指定区域在不同进程之间的共享方式，以及区域是否同步到相应的文件等等（具体参见man）。
+
+
+
+munmap
+
+取消address指定地址范围的映射。以后再引用取消的映射的时候就会导致非法内存的访问。这里address应该是页面的整数倍。
+
+成功的时候这个函数返回0。
+
+失败的时候，两者都返回-1.
 
 ### 内核打印信息
 

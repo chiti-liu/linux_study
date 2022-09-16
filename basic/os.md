@@ -215,31 +215,21 @@ int main(int argc,char **argv)
 
 分析底层命令：
 
-fork
-
+```
+ fork
 ​		_NR_fork
-
 ​		int 0x80
-
 ​				system_call
-
 ​				call system_table
-
 ​						sys_fork
-
 ​								copy_process	;申请内存空间，创建TCB/PCB，创建并填充用户栈和内核栈，关联栈和TCB/PCB
-
 ​				jne reschedule
-
 ​						next = ready_list_schedule	;就绪队列中找出最前面的进程描述符
-
 ​						switch_to (next)
-
 ​				iret
-
 ​		cmpl
-
 ​		jne  ;判断返回值的比较，为0则则跳转到子进程，非零则在父进程
+```
 
 ![image-20220909134501566](../typora-user-images/image-20220909134501566.png)
 
@@ -316,8 +306,8 @@ SPF短进程优先
 - 必须同一上下文进行上锁和解锁
 - 不能用于中断上下文
 - 不能递归，和自旋锁一样
-- 持有期间，可以调用可能引起线程切换的函数
-- 相比自旋锁，不会引起线程切换，开销小执行快。
+- 持有期间，可以调用可能引起线程切换的函数，但必须确保能及时回来，否则可能死锁，另一个获得锁饥饿。
+- 相比起来，自旋锁不会引起线程切换，开销小执行快。
 - 根据不同场景，优先使用自旋锁，其次互斥量，最后信号量。
 
 ### 挂起、睡眠和阻塞的区别
@@ -363,6 +353,8 @@ SPF短进程优先
 ```
 https://blog.csdn.net/qq_19018277/article/details/98446415
 ```
+
+![image-20220916165340263](../typora-user-images/image-20220916165340263.png)
 
 #### 共享存储
 
