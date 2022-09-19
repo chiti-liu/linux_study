@@ -400,7 +400,7 @@ static int spidev_probe(struct spi_device *spi)
 
 
 	/* fb的虚拟地址 */
-	myfb_info->screen_base = dma_alloc_wc(NULL, myfb_info->fix.smem_len, &phy_addr,
+	myfb_info->screen_base = dma_alloc_writecombine(NULL, myfb_info->fix.smem_len, &phy_addr,
 					 GFP_KERNEL);
 	myfb_info->fix.smem_start = phy_addr;  /* fb的物理地址 */
 	
