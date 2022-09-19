@@ -105,7 +105,7 @@ bootm_headers_t
 
 ### u-boot启动流程及分析
 
-在此之前通过rom初始化好DDR、SP等？
+在此之前通过rom初始化好DDR、SP等
 
 然后进行中断向量表的初始化
 
@@ -163,3 +163,4 @@ bootm/i:uImage
 ```
 
 ![image-20220915160243196](../typora-user-images/image-20220915160243196.png)
+

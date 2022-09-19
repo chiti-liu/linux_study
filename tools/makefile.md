@@ -157,3 +157,49 @@ test:   $(CC) -o test test.c
 - `PFLAGS` : Pascal语言编译器参数。
 - `RFLAGS` : Ratfor 程序的Fortran 编译器参数。
 - `YFLAGS` : Yacc文法分析器参数
+
+### 通过 -B 选项让所有目标总是重新建立
+
+到目前为止，你可能注意到 make 命令不会编译那些自从上次编译之后就没有更改的文件，但是，如果你想覆盖 make 这种默认的行为，你可以使用 -B 选项。
+
+###  使用 -d 选项打印调试信息
+
+```
+$ make -d | more
+GNU Make 3.81
+Copyright (C) 2006 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.
+There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.
+
+This program built for x86_64-pc-linux-gnu
+Reading makefiles…
+Reading makefile `Makefile’…
+Updating makefiles….
+Considering target file `Makefile’.
+Looking for an implicit rule for `Makefile’.
+Trying pattern rule with stem `Makefile’.
+Trying implicit prerequisite `Makefile.o’.
+Trying pattern rule with stem `Makefile’.
+Trying implicit prerequisite `Makefile.c’.
+Trying pattern rule with stem `Makefile’.
+Trying implicit prerequisite `Makefile.cc’.
+Trying pattern rule with stem `Makefile’.
+Trying implicit prerequisite `Makefile.C’.
+Trying pattern rule with stem `Makefile’.
+Trying implicit prerequisite `Makefile.cpp’.
+Trying pattern rule with stem `Makefile’.
+--More--
+```
+
+### 使用 -C 选项改变目录
+
+### 通过 -f 选项将其它文件看作 Makefile
+
+如果你想将重命名 Makefile 文件，比如取名为 my_makefile 或者其它的名字，我们想让 make 将它也当成 Makefile，可以使用 -f 选项。
+
+```
+make -f my_makefile
+```
+
+通过这种方法，make 命令会选择扫描 my_makefile 来代替 Makefile。

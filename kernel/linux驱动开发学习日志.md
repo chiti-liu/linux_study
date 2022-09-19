@@ -188,6 +188,401 @@ https://www.cnblogs.com/xiaojiang1025/p/6193959.html
 
 ![image-20220817103056518](..\typora-user-images\image-20220817103056518.png)
 
+### 中断
+
+#### 中断号
+
+每个中断都有一个中断号，通过中断号即可区分不同的中断，有的资料也把中断号叫做中断线。在 Linux 内核中使用一个 int 变量表示中断号。
+
+编写驱动的时候需要用到中断号，我们用到中断号，中断信息已经写到了设备树里面，因此可以通过 irq_of_parse_and_map 函数从 interupts 属性中提取到对应的设备号
+
+```
+unsigned int irq_of_parse_and_map(struct device_node *dev, int index) 
+     dev：设备节点。
+     index：索引号，interrupts 属性可能包含多条中断信息，通过 index 指定要获取的信息。 
+     返回值：中断号。
+```
+
+如果使用 GPIO 的话，可以使用 gpio_to_irq 函数来获取 gpio 对应的中断号
+
+```
+int gpio_to_irq(unsigned int gpio) 
+    gpio：要获取的 GPIO 编号。 
+    返回值：GPIO 对应的中断号。
+```
+
+#### request_irq 
+
+在 Linux 内核中要想使用某个中断是需要申请的，request_irq 函数用于申请中断，**request_irq 函数可能会导致睡眠**，因此不能在中断上下文或者其他禁止睡眠的代码段中使用 request_irq 函 数。
+
+request_irq 函数会激活(使能)中断，所以不需要我们手动去使能中断。
+
+```
+int request_irq(unsigned int irq, 
+				irq_handler_t handler, 
+				unsigned long flags,
+ 				const char *name, 
+				void *dev)
+```
+
+- irq：要申请中断的中断号。 
+
+- handler：中断处理函数，当中断发生以后就会执行此中断处理函数。
+
+-  flags：中断标志，可以在文件 include/linux/interrupt.h 里面查看所有的中断标志，这里我们 介绍几个常用的中断标志，如表 51.1.1.1 所示：
+
+  ![image-20220919172712798](../typora-user-images/image-20220919172712798.png)
+
+#### 中断处理函数 
+
+使用 `request_irq` 函数申请中断的时候需要设置中断处理函数
+
+```
+ irqreturn_t (*irq_handler_t) (int, void *) 
+```
+
+第一个参数是要中断处理函数要相应的中断号。
+
+第二个参数是一个指向 void 的指针，也就是个通用指针，需要与 request_irq 函数的 dev 参数保持一致。用于区分共享中断的不同设备， dev 也可以指向设备数据结构。中断处理函数的返回值为 irqreturn_t 类型，irqreturn_t 类型定义 如下所示：
+
+```
+enum irqreturn {
+    IRQ_NONE = (0 << 0),
+    IRQ_HANDLED = (1 << 0),
+    IRQ_WAKE_THREAD = (1 << 1),
+};
+typedef enum irqreturn irqreturn_t;
+可以看出 irqreturn_t 是个枚举类型，一共有三种返回值。一般中断服务函数返回值使用如下形式：
+return IRQ_RETVAL(IRQ_HANDLED)
+
+```
+
+#### 中断使能与禁止函数 
+
+```
+void enable_irq(unsigned int irq)
+
+void disable_irq(unsigned int irq)	//要等到当前正在执行的中断处理函数执行完才返回，因此使用者需要保证不会产生新的中断，并且确保所有已经开始执行的中断处理程序已经全部退出。
+```
+
+```
+void disable_irq_nosync(unsigned int irq) 
+```
+
+`disable_irq_nosync` 函数调用以后立即返回，不会等待当前中断处理程序执行完毕。上面三个函数都是使能或者禁止某一个中断，有时候我们需要关闭当前处理器的整个中断系统，也就是在学习 STM32 的时候常说的关闭全局中断，这个时候可以使用如下两个函数：
+
+```
+local_irq_enable() //使能当前处理器中断系统
+
+local_irq_disable() //禁止当前处理器中断系统
+```
+
+假如 A 任务调用 local_irq_disable 关闭全局中断 10S，当关闭了 2S 的时候 B 任务开始运 行，B 任务也调用 local_irq_disable 关闭全局中断 3S，3 秒以后 B 任务调用 local_irq_enable 函 数将全局中断打开了。
+
+此时才过去 2+3=5 秒的时间，然后全局中断就被打开了，此时 A 任务要关闭 10S 全局中断的愿望就破灭了，然后 A 任务就“生气了”，结果很严重，可能系统都要被 A 任务整崩溃。
+
+为了解决这个问题，B 任务不能直接简单粗暴的通过 `local_irq_enable` 函数来打开全局中断，而是将中断状态恢复到以前的状态，要考虑到别的任务的感受，此时就要用到下 面两个函数：
+
+```
+local_irq_save(flags) //禁止中断，并且将中断状态保存在 flags
+
+local_irq_restore(flags)  //恢复中断，将中断到 flags 状态。
+```
+
+
+
+#### free_irq 函数
+
+使用中断的时候需要通过 request_irq 函数申请，使用完成以后就要通过 free_irq 函数释放 掉相应的中断。
+
+如果中断不是共享的，那么 free_irq 会删除中断处理函数并且禁止中断。
+
+```
+ void free_irq(unsigned int irq,  void *dev) 
+```
+
+-  irq：要释放的中断。
+-  dev：如果中断设置为共享(IRQF_SHARED)的话，此参数用来区分具体的中断。共享中断只有在释放最后中断处理函数的时候才会被禁止掉。 
+- 返回值：无。
+
+#### 上半部与下半部
+
+上半部：上半部就是中断处理函数，那些处理过程比较快，不会占用很长时间的处理就可以放在上半部完成。
+
+ 下半部：如果中断处理过程比较耗时，那么就将这些比较耗时的代码提出来，交给下半部去执行，这样中断处理函数就会快进快出。
+
+- ```
+  - 如果要处理的内容不希望被其他中断打断，那么可以放到上半部。
+  - 如果要处理的任务对时间敏感，可以放到上半部。 
+  - 如果要处理的任务与硬件有关，可以放到上半部 
+  - 除了上述三点以外的其他任务，优先考虑放到下半部。
+  ```
+
+1. 软中断
+
+   ```
+   struct softirq_action{
+    	void (*action)(struct softirq_action *);
+   };
+   ```
+
+   在 kernel/softirq.c 文件中一共定义了 10 个软中断，如下所示：
+
+   ```
+   static struct softirq_action softirq_vec[NR_SOFTIRQS];
+   ```
+
+   NR_SOFTIRQS 是枚举类型，定义在文件 include/linux/interrupt.h 中，定义如下：
+
+   ```
+   enum{
+        HI_SOFTIRQ=0, /* 高优先级软中断 */
+        TIMER_SOFTIRQ, /* 定时器软中断 */
+        NET_TX_SOFTIRQ, /* 网络数据发送软中断 */
+        NET_RX_SOFTIRQ, /* 网络数据接收软中断 */
+        BLOCK_SOFTIRQ, 
+        BLOCK_IOPOLL_SOFTIRQ, 
+        TASKLET_SOFTIRQ, /* tasklet 软中断 */
+        SCHED_SOFTIRQ, /* 调度软中断 */
+        HRTIMER_SOFTIRQ, /* 高精度定时器软中断 */
+        RCU_SOFTIRQ, /* RCU 软中断 */
+        NR_SOFTIRQS
+   };
+   ```
+
+   可以看出，一共有 10 个软中断，因此 NR_SOFTIRQS 为 10，因此数组 softirq_vec 有 10 个元素。
+
+   softirq_action 结构体中的 action 成员变量就是软中断的服务函数，数组 softirq_vec 是个全局数组，因此所有的 CPU(对于 SMP 系统而言)都可以访问到，每个 CPU 都有自己的触发和控制机制，并且只执行自己所触发的软中断。
+
+   但是各个 CPU 所执行的软中断服务函数确是相同的，都是数组 softirq_vec 中定义的 action 函数。
+
+   要使用软中断，必须先使用 open_softirq 函数注册对应的软中断处理函数，open_softirq 函数原型如下：
+
+   ```
+   void open_softirq(int nr, void (action)(struct softirq_action ))
+       nr：要开启的软中断，NR_SOFTIRQS中选择一个。
+       action：软中断对应的处理函数。
+       返回值：没有返回值。
+   ```
+
+   注册好软中断以后需要通过 raise_softirq 函数触发
+
+   ```
+   void raise_softirq(unsigned int nr) 
+       nr：要触发的软中断，NR_SOFTIRQS中选择一个。
+       返回值：没有返回值。
+   ```
+
+   **软中断必须在编译的时候静态注册！**Linux 内核使用 softirq_init 函数初始化软中断。
+
+   ```
+   void __init softirq_init(void)
+   {
+        int cpu;
+        for_each_possible_cpu(cpu) {
+            per_cpu(tasklet_vec, cpu).tail =
+            &per_cpu(tasklet_vec, cpu).head;
+            per_cpu(tasklet_hi_vec, cpu).tail =
+            &per_cpu(tasklet_hi_vec, cpu).head;
+        }
+        open_softirq(TASKLET_SOFTIRQ, tasklet_action);
+        open_softirq(HI_SOFTIRQ, tasklet_hi_action);
+   }
+   ```
+
+2. tasklet
+
+   tasklet 是利用软中断来实现的另外一种下半部机制，在软中断和 tasklet 之间，建议大家使 用 tasklet。
+
+   ```
+   struct tasklet_struct{
+       struct tasklet_struct *next; /* 下一个 tasklet */
+       unsigned long state; /* tasklet 状态 */
+       atomic_t count; /* 计数器，记录对 tasklet 的引用数 */
+       void (*func)(unsigned long); /* tasklet 执行的函数 */
+       unsigned long data; /* 函数 func 的参数 */
+   };
+   ```
+
+3. 工作队列
+
+   工作队列在进程上下文执行，工作队列将要推后的 工作交给一个内核线程去执行，因为工作队列工作在进程上下文，因此工作队列允许睡眠或重 新调度。因此如果你要推后的工作可以睡眠那么就可以选择工作队列，否则的话就只能选择软 中断或 tasklet。
+
+   ```
+   /* work_struct 结构体表示一个工作 */
+   struct work_struct {
+    atomic_long_t data; 
+    struct list_head entry;
+    work_func_t func; /* 工作队列处理函数 */
+   };
+   /* 工作队列 */
+   struct workqueue_struct {
+        struct list_head pwqs; 
+        struct list_head list; 
+        struct mutex mutex; 
+        int work_color;
+        int flush_color; 
+        atomic_t nr_pwqs_to_flush;
+        struct wq_flusher *first_flusher;
+        struct list_head flusher_queue; 
+        struct list_head flusher_overflow;
+        struct list_head maydays; 
+        struct worker *rescuer; 
+        int nr_drainers; 
+        int saved_max_active;
+        struct workqueue_attrs *unbound_attrs;
+        struct pool_workqueue *dfl_pwq;  
+        char name[WQ_NAME_LEN];
+        struct rcu_head rcu;
+        unsigned int flags ____cacheline_aligned;
+        struct pool_workqueue __percpu *cpu_pwqs;
+        struct pool_workqueue __rcu *numa_pwq_tbl[];
+   };
+   
+   /*用工作者线程(worker thread)*/
+   struct worker {
+        union {
+            struct list_head entry; 
+            struct hlist_node hentry;
+        };
+        struct work_struct *current_work; 
+        work_func_t current_func; 
+        struct pool_workqueue *current_pwq;
+        bool desc_valid;
+        struct list_head scheduled; 
+        struct task_struct *task; 
+        struct worker_pool *pool; 
+        struct list_head node; 
+        unsigned long last_active; 
+        unsigned int flags; 
+        int id; 
+        char desc[WORKER_DESC_LEN];
+        
+        struct workqueue_struct *rescue_wq;
+        //每个 worker 都有一个工作队列
+   };
+   
+   ```
+
+在实际的驱动开发中，我们只需要定义工作(work_struct)即可，关于工作 队列和工作者线程我们基本不用去管。
+
+简单创建工作很简单，直接定义一个 work_struct 结构体 变量即可，然后使用 INIT_WORK 宏来初始化工作，INIT_WORK 宏定义如下：
+
+```
+#define INIT_WORK(_work, _func)
+```
+
+work 表示要初始化的工作，_func 是工作对应的处理函数。 
+
+也可以使用 DECLARE_WORK 宏一次性完成工作的创建和初始化
+
+```
+#define DECLARE_WORK(n, f)
+    n 表示定义的工作(work_struct)
+    f 表示工作对应的处理函数。 
+```
+
+和 tasklet 一样，工作也是需要调度才能运行的，工作的调度函数为schedule_work
+
+```
+bool schedule_work(struct work_struct *work) 
+    work：要调度的工作。 
+    返回值：0 成功，其他值 失败。
+```
+
+
+
+### 定时器
+
+Linux 内核使用全局变量 jiffies 来记录系统从启动以来的系统节拍数，系统启动的时候会 将 jiffies 初始化为 0，jiffies 定义在文件 include/linux/jiffies.h 中，定义如下： 
+
+```
+ extern u64 __jiffy_data jiffies_64; 
+
+ extern unsigned long volatile __jiffy_data jiffies; 
+```
+
+`jiffies_64` 和 `jiffies` 其实是同一个东西，`jiffies_64` 用于 64 位系统，而 `jiffies` 用于 32 位系统。 为了兼容不同的硬件，`jiffies` 其实就是 `jiffies_64` 的低 32 位。
+
+`jiffies_64` 和 `jiffies` 其实是同一个东西，`jiffies_64` 用于 64 位系统，而 `jiffies` 用于 32 位系统。 为了兼容不同的硬件，`jiffies` 其实就是 `jiffies_64` 的低 32 位。
+
+假如 HZ 为最大 值 1000 的时候，`32 位的 jiffies` 只需要 49.7 天就发生了绕回，对于 `64 位的 jiffies` 来说大概需要 5.8 亿年才能绕回，因此 `jiffies_64` 的绕回忽略不计。处理 `32 位 jiffies` 的绕回显得尤为重要， Linux 内核提供了如表 50.1.1.1 所示的几个 API 函数来处理绕回。
+
+![image-20220919164332088](../typora-user-images/image-20220919164332088.png)
+
+Linux 内核使用 timer_list 结构体表示内核定时器，timer_list 定义在文件 include/linux/timer.h 中。
+
+```
+struct timer_list {
+     struct list_head entry;
+     unsigned long expires; /* 定时器超时时间，单位是节拍数 */
+     struct tvec_base *base;
+     void (*function)(unsigned long); /* 定时处理函数 */
+     unsigned long data; /* 要传递给 function 函数的参数 */
+     int slack;
+};
+```
+
+#### API
+
+1、init_timer
+
+ init_timer 函数负责初始化 timer_list 类型变量，当我们定义了一个 timer_list 变量以后一定 要先用 init_timer 初始化一下。
+
+```
+void init_timer(struct timer_list *timer)
+ 	timer：要初始化定时器。
+ 	返回值：没有返回值。 
+```
+
+2、add_timer
+
+ add_timer 函数用于向 Linux 内核注册定时器，使用 add_timer 函数向内核注册定时器以后， 定时器就会开始运行
+
+```
+void add_timer(struct timer_list *timer) 
+    timer：要注册的定时器。 
+    返回值：没有返回值。
+```
+
+ 3、del_timer
+
+del_timer 函数用于删除一个定时器，不管定时器有没有被激活，都可以使用此函数删除。
+
+ 在多处理器系统上，定时器可能会在其他的处理器上运行，因此在调用 del_timer 函数删除定时器之前要先等待其他处理器的定时处理器函数退出。 
+
+```
+int del_timer(struct timer_list * timer) 
+    timer：要删除的定时器。 
+    返回值： 0，定时器还没被激活；
+    		1，定时器已经激活。 
+```
+
+4、del_timer_sync 
+
+ del_timer_sync 函数是 del_timer 函数的同步版，会等待其他处理器使用完定时器再删除， del_timer_sync 不能使用在中断上下文中。del_timer_sync 函数原型如下所示： 
+
+```
+int del_timer_sync(struct timer_list *timer) 
+    timer：要删除的定时器。 
+    返回值： 0，定时器还没被激活；
+    		1，定时器已经激活。
+```
+
+5、mod_timer
+
+mod_timer 函数用于修改定时值，如果定时器还没有激活的话，mod_timer 函数会激活定时器！
+
+```
+int mod_timer(struct timer_list *timer, unsigned long expires) 
+    timer：要修改超时时间(定时值)的定时器。 
+    expires：修改后的超时时间。 
+    返回值： 0，调用 mod_timer 函数前定时器未被激活；
+    		1，调用 mod_timer 函数前定时器已 被激活。
+```
+
+
+
 ### 互斥和同步
 
 1. 为什么自旋锁的临界区不能睡眠？
@@ -215,15 +610,45 @@ https://www.cnblogs.com/xiaojiang1025/p/6193959.html
 
 #### 原子变量
 
-原子操作保证指令以原子的反射光hi执行，执行过程中不会被打断。假设两个线程thread_afunc和thread_bfunc执行i++操作，那么i最后等于？
+原子操作保证指令以原子的方式执行，执行过程中不会被打断。假设两个线程thread_afunc和thread_bfunc执行i++操作，那么i最后等于？
 
 ![image-20220822142119542](../typora-user-images/image-20220822142119542.png)
 
 
 
+![image-20220919153606266](../typora-user-images/image-20220919153606266.png)
+
+![image-20220919153638440](../typora-user-images/image-20220919153638440.png)
+
+![image-20220919153658833](../typora-user-images/image-20220919153658833.png)
+
 #### 自旋锁
 
-自旋锁一直占据线程不阻塞。自旋锁时间必须短且不可以引入进程切换，否则可能死锁。
+自旋锁一直占据线程不阻塞。自旋锁时间必须短且不可以引入进程切换，被自旋锁保护的临界区一定不能调用任何能够引起睡眠和阻塞的 API 函数，否则可能死锁。
+
+```
+typedef struct spinlock {
+    union {
+        struct raw_spinlock rlock;
+
+        #ifdef CONFIG_DEBUG_LOCK_ALLOC
+        # define LOCK_PADSIZE (offsetof(struct raw_spinlock, dep_map))
+        struct {
+        u8 __padding[LOCK_PADSIZE];
+        struct lockdep_map dep_map;
+        };
+        #endif
+    };
+} spinlock_t;
+```
+
+![image-20220919154936257](../typora-user-images/image-20220919154936257.png)
+
+![image-20220919155259027](../typora-user-images/image-20220919155259027.png)
+
+使用 `spin_lock_irq/spin_unlock_irq` 的时候需要用户能够确定加锁之前的中断状态，但实际 上内核很庞大，运行也是“千变万化”，我们是很难确定某个时刻的中断状态，因此**不推荐**使用`spin_lock_irq/spin_unlock_irq`。建议使用 `spin_lock_irqsave/spin_unlock_irqrestore`，因为这一组函 数会保存中断状态，在释放锁的时候会恢复中断状态。一般在**线程中**使用 `spin_lock_irqsave/ spin_unlock_irqrestore`，在**中断中**使用 `spin_lock/spin_unlock`。
+
+![image-20220919155805016](../typora-user-images/image-20220919155805016.png)
 
 #### 读写锁
 
@@ -231,7 +656,35 @@ https://www.cnblogs.com/xiaojiang1025/p/6193959.html
 
 #### 信号量
 
-#### 互斥量
+1. 因为信号量可以使等待资源线程进入休眠状态，因此适用于那些占用资源比较久的场合。
+2. 因此信号量不能用于中断中，因为信号量会引起休眠，中断不能眠。
+3. 如果共享资源的持有时间比较短，那就不适合使用信号量了，因为频繁的休眠、切换线程引起的开销要远大于信号量带来的那点优势。
+
+```
+struct semaphore {
+     raw_spinlock_t lock;
+     unsigned int count;
+     struct list_head wait_list;
+};
+```
+
+![image-20220919160353744](../typora-user-images/image-20220919160353744.png)
+
+#### 互斥量（mutex）
+
+1. mutex 可以导致休眠，因此不能在中断中使用 mutex，**中断中只能使用自旋锁**。
+2. 和信号量一样，mutex 保护的临界区可以调用引起阻塞的 API 函数。 
+3. 因为一次只有一个线程可以持有 mutex，因此，必须由 mutex 的持有者释放 mutex。并且 mutex 不能递归上锁和解锁。
+
+```
+struct mutex {
+     /* 1: unlocked, 0: locked, negative: locked, possible waiters */
+     atomic_t count;
+     spinlock_t wait_lock;
+};
+```
+
+![image-20220919160740099](../typora-user-images/image-20220919160740099.png)
 
 #### RCU机制
 
