@@ -74,13 +74,13 @@ modinfo: 生成模块的具体版本信息
 
 新技术：`thread_irq(`针对多核设备，工作队列和`tasklet`只能在单核运行，浪费CPU资源)
 
-（`hardwareirq,irq`）同时注册在domain域中
+（`hardwareirq,irq`）同时注册在`domain`域中(中断都注册在`domain`域  `irq_create_fwspec_mapping`)
 
 ![image-20220804111804080](..\typora-user-images\image-20220804111804080.png)
 
 #### 疑问：如果一个硬件中断同时对应比如按键中断和外部输入中断，那么究竟是怎么详细区分的呢？
 
-答：载入每一个irq去执行确定到底是哪一个（**但是概念很模糊啊，还是没搞清具体怎么判断**）。
+答：载入每一个irq去执行确定到底是哪一个（**但是概念很模糊啊，还是没搞清具体怎么判断**），最好去gpio_request资源申请，确认当前资源没有被其他驱动占用。
 
 #### 异步通知
 
@@ -123,6 +123,84 @@ https://www.cnblogs.com/sky-heaven/p/7390370.html
 5. kmalloc 分配内存的开销小，因此 kmalloc 比 vmalloc 要快；
 
 一般情况下，内存只有在要被 DMA 访问的时候才需要物理上连续，但为了性能上的考虑，内核中一般使用 kmalloc()，而只有在需要获得**大块内存**时才使用 vmalloc()。例如，当模块被**动态加载**到内核当中时，就把模块装载到由 vmalloc() 分配的内存上。
+
+### 内核中的内存分配
+
+```
+https://blog.csdn.net/wang_518/article/details/108913575
+```
+
+linux内核中的内存分配
+1、devm_kzalloc & devm_kfree
+函数devm_kzalloc和kzalloc一样都是内核内存分配函数，但是devm_kzalloc是跟设备（装置）有关的，当设备（装置）被拆卸或者驱动（驱动程序）卸载（空载）时，内存会被自动释放。另外，当内存不再使用时，可以使用函数devm_kfree（）释放。而kzalloc没有自动释放的功能，用的时候需要小心使用，如果忘记释放，会造成内存泄漏。
+函数原型为
+
+```
+void * devm_kzalloc (struct device * dev, size_t size, gfp_t gfp);
+dev
+    Device to allocate memory for
+    申请内存的目标设备。
+size
+    Allocation size
+    申请的内存大小
+gfp
+    Allocation gfp flags
+    申请内存的类型标志
+```
+
+2、kmalloc & kfree
+分配的内存物理上连续（虚拟上也连续），只能在低端内存分配（直接内存映射区）。
+
+```
+void *kmalloc(size_t size, gfp_t gfp)；
+    size： 待分配内存大小（按字节计算）
+    gfp: 分配标志，用于控制kmalloc行为。
+```
+
+3、get_zeroed_page & free_page
+
+```
+unsigned long get_zeroed_page(gfp_t gfp_mask);
+	gfp: 分配标志，用于控制kmalloc行为。
+```
+
+基于kmalloc实现。
+分配的内存物理上连续，分配一个页面（4K），并且该页面内容被清零，只能在低端内存分配。
+
+4、__get_free_pages & free_pages
+
+```
+unsigned long __get_free_pages(gfp_t gfp_mask, unsigned int order);
+    gfp_mask: 分配标志，用于控制kmalloc行为
+    order: 请求或者释放的页数的2的幂，例如：操作1页，该值为0，操作16页该值为4.如果该值太大会寻址分配失败，该值允许的最大值依赖于体系结构。
+```
+
+分配的内存物理上连续，分配指定页数的底端内存。（如果分配太大内存几百兆或者上G的内存，一般可以通过Uboot启动参数来实现（bootmemory）。
+
+```
+int get_order(unsigned long size)；
+    size： 需要计算order值的大小（按字节计算）
+    返回：__get_free_pages等函数需要的order值
+```
+
+5、alloc_pages & __free_pages
+分配的内存物理上连续，分配指定页数的内存，可以从高端内存，也可以从底端内存分配，通过宏指定。
+
+6、 vmalloc & vfree
+
+```
+void *vmalloc(unsigned long size);
+size：待分配的内存的大小，自动按页对齐。
+```
+
+默认在动态内存映射区分配。分配的内存在内核空间中连续（虚拟连续），物理上无需连续。vmalloc由于不需要物理上也连续，所以性能很差，一般只有在必须申请大块内存时才使用，例如动态插入模块时。
+
+7、内存分配标志
+1、GFP_KERNEL:
+表示该次内存 分配由内核进程调用，凡是内核内存的正常分配，该分配方式最常用。如果空闲空间不足，该次分配将使得进程进入睡眠，等待空闲页出现。不能在中断上下文、自旋锁保护的临界区和中断屏蔽保护的临界区使用。
+
+2、GFP_ATOMIC:
+用于分配请求不是来自于进程上下文，而是来自于中断、任务队列处理、内核定时器等中断上下文的情况，此时不能进入休眠。如果空闲内存不足，立即返回。
 
 ### fcntl/ioctl
 
@@ -490,7 +568,7 @@ bool schedule_work(struct work_struct *work)
     返回值：0 成功，其他值 失败。
 ```
 
-
+当然如果想推迟工作可以INIT_DELAYED_WORK()声明，schedule_delayed_work延后执行
 
 ### 定时器
 
@@ -738,7 +816,7 @@ gpio子系统对于驱动层的API位于“/kernel/include/linux/gpio.h”中。
 【1】检查gpio是否可用
 
 ```
-int gpiod_is_valid(int number); 
+int gpio_is_valid(int number); 
 参数/				含义
 number			gpio序号
 返回			可用返回true，不可用返回false
@@ -749,7 +827,7 @@ number			gpio序号
 使用一个gpio前，必须向内核申请该gpio。
 
 ```
-int gpiod_request(unsigned gpio, const char *label)
+int gpio_request(unsigned gpio, const char *label)
 参数			含义
 gpio		待申请gpio序号
 label		gpio命名
@@ -770,7 +848,7 @@ label	gpio命名
 【4】设置gpio输入模式
 
 ```
-int gpiod_direction_input(unsigned gpio)
+int gpio_direction_input(unsigned gpio)
 参数			含义
 gpio		待设置gpio序号
 返回		成功返回0，失败返回负数
@@ -779,7 +857,7 @@ gpio		待设置gpio序号
 【5】设置gpio输出模式
 
 ```
-int gpiod_direction_output(unsigned gpio, int value)
+int gpio_direction_output(unsigned gpio, int value)
 参数		含义
 gpio	待设置gpio序号
 value	默认输出状态
@@ -789,7 +867,7 @@ value	默认输出状态
 【6】读取 gpio状态
 
 ```
-int gpiod_get_value(unsigned int gpio)
+int gpio_get_value(unsigned int gpio)
 参数	含义
 gpio	待读取gpio序号
 返回	成功返回gpio状态（1/0），失败返回负数
@@ -798,7 +876,7 @@ gpio	待读取gpio序号
 【7】设置 gpio状态
 
 ```
-void gpiod_set_value(unsigned int gpio, int value)
+void gpio_set_value(unsigned int gpio, int value)
 参数	含义
 gpio	待设置gpio序号
 value	待设置值
@@ -849,6 +927,13 @@ gpio	待设置gpio序号
 		};
 	};
 	  修改完设备树，可以编译内核，更新板子boot区域（内核和设备树文件）。
+
+### pinctrl
+
+```
+https://www.cnblogs.com/hellokitty2/p/12501493.html
+```
+
 ### struct inode 和struct file
 
 ```
@@ -966,14 +1051,22 @@ https://zhuanlan.zhihu.com/p/115657651
   - devm_gpiod_get_index_optional
     - devm_gpiod_get_index
       - gpiod_get_index
+        - of_find_gpio
+          - of_get_named_gpiod_flags
+
+![image-20220920132019701](../typora-user-images/image-20220920132019701.png)
+
+![image-20220920131903693](../typora-user-images/image-20220920131903693.png)
 
 
 ```
-命名需要为*-gpios
+命名需要为*-gpios,且长度不能大于32
 ```
 
 - gpiod_get
   - gpiod_get_index
+    - of_find_gpio
+      - of_get_named_gpiod_flags
 
 ```
 struct gpio_desc *__must_check gpiod_get_index(struct device *dev,
@@ -992,7 +1085,16 @@ struct gpio_desc *__must_check gpiod_get_index(struct device *dev,
  */
 ```
 
+- of_get_named_gpio
+  - of_get_named_gpio_flags(nd, name, index, NULL)
+- of_get_gpio_flags
+  - of_get_named_gpio_flags（nd, "gpios", index, flags）
 
+### gpio_chip
+
+```
+https://www.cnblogs.com/wanglouxiaozi/p/14480296.html
+```
 
 ### mmap
 
@@ -1230,11 +1332,15 @@ https://blog.csdn.net/thisway_diy/article/details/84336817//原理
 https://www.cnblogs.com/TaXueWuYun/p/15389889.html	//API
 ```
 
-开发板中，/sys/firmware/fdt查看原始dtb文件
+开发板中，`/sys/firmware/fdt`查看原始dtb文件
 
- /sys/firmware/devicetree // 以目录结构程现的dtb文件, 根节点对应base目录, 每一个节点对应一个目录, 每一个属性对应一个文件
-比如查看 #address-cells 的16进制
+ `/sys/firmware/devicetree` // 以目录结构程现的dtb文件, 根节点对应base目录, 每一个节点对应一个目录, 每一个属性对应一个文件
+比如查看 `#address-cells` 的16进制
+
+```
 hexdump -C “#address-cells”
+```
+
 查看compatible
 
 ```
@@ -1244,8 +1350,16 @@ cat compatible
 
 
 如果你在设备树设备节点中设置一个错误的中断属性，那么就导致led对应的平台设备节点没办法创建
- /sys/devices/platform // 系统中所有的platform_device, 有来自设备树的, 也有来自.c文件中注册的
+ `/sys/devices/platform` // 系统中所有的`platform_device`, 有来自设备树的, 也有来自.c文件中注册的。
 
-对于来自设备树的platform_device, 可以进入 /sys/devices/platform/<设备名>/of_node 查看它的设备树属性
+对于来自设备树的`platform_device`, 可以进入 `/sys/devices/platform/<设备名>/of_node` 查看它的设备树属性。
 
-d. /proc/device-tree 是链接文件, 指向 /sys/firmware/devicetree/base
+ `/proc/device-tree` 是链接文件, 指向 `/sys/firmware/devicetree/base`
+
+### devm_**
+
+```
+https://blog.csdn.net/jgw2008/article/details/52691568
+```
+
+函数`devm_kzalloc`和`kzalloc`一样都是内核内存分配函数，但是`devm_kzalloc`是跟设备（装置）有关的，当设备（装置）被拆卸或者驱动（驱动程序）卸载（空载）时，内存会被自动释放。另外，当内存不再使用时，可以使用函数`devm_kfree（）`释放。而`kzalloc`没有自动释放的功能，用的时候需要小心使用，如果忘记释放，会造成内存泄漏。
