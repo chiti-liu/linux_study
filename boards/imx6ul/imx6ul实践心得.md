@@ -33,7 +33,7 @@ setenv serverip 192.168.137.8
 setenv gatewayip 192.168.137.1
 setenv netmask 255.255.255.0
 setenv bootcmd run nandargs \;tftp 0x80800000 zImage \; tftp 0x83000000 imx6ul-14x14-evk-c2-256m.dtb \; bootz 0x80800000 - 0x83000000
-setenv bootargs console=ttymxc0,115200 cma=96M root=/dev/nfs rw ip=192.168.137.2:192.168.137.8:192.168.137.1:255.255.255.0::eth0:off nfsroot=192.168.137.8:/home/forlinx/nfs_rootfs,v3,tcp rootfstype=yaffs2,calibrate=${calibrate}
+setenv bootargs console=tty1 console=ttymxc0,115200 cma=96M root=/dev/nfs rw ip=192.168.137.2:192.168.137.8:192.168.137.1:255.255.255.0::eth0:off nfsroot=192.168.137.8:/home/forlinx/nfs_rootfs,v3,tcp rootfstype=yaffs2,calibrate=${calibrate}
 boot
 
 

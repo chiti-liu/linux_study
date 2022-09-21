@@ -1,0 +1,126 @@
+
+/*
+ * Copyright (C) 2016 Freescale Semiconductor, Inc.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+
+#include "imx6ul-14x14-evk-c2-emmc.dts"
+
+&sim2 {
+	status = "disabled";
+};
+&csi {
+        status = "disabled";
+};
+&lcdif{
+        status = "disabled";
+};
+&ecspi1 {
+	fsl,spi-num-chipselects = <1>;
+	pinctrl-names = "default";
+        cs-gpios = <&gpio3 26 GPIO_ACTIVE_HIGH>;
+    	pinctrl-0 = <&pinctrl_ecspi1 &pinctrl_ecspi1_cs>;/*be careful of different api invoke in source files*/
+	status = "okay";
+	st7735s: st7735s@00{
+		compatible = "st7735s";
+		reg = <0x0>;
+		spi-max-frequency = <20000000>;
+		reset-gpios = <&gpio4 23 GPIO_ACTIVE_HIGH>;/* GPIO4_C2 */	
+		dc-gpios = <&gpio4 24 GPIO_ACTIVE_HIGH>;/* GPIO4_C6 */	//description
+		pinctrl-names = "default";
+    		pinctrl-0 = <&st7735s_reset &st7735s_dc>;/*be careful of different api invoke in source files*/
+		};
+};
+&iomuxc {
+	imx6ul-evk {
+		pinctrl_ecspi1: ecspi1grp {
+                         fsl,pins = <
+                                MX6UL_PAD_LCD_DATA23__ECSPI1_MISO   0x100b1
+				MX6UL_PAD_LCD_DATA22__ECSPI1_MOSI   0x100b1
+                                MX6UL_PAD_LCD_DATA20__ECSPI1_SCLK   0x100b1
+                         >;
+                };
+		pinctrl_ecspi1_cs: ecspi1_csgrp {
+                         fsl,pins = <
+                                MX6UL_PAD_LCD_DATA21__GPIO3_IO26   0x100b1
+                         >;
+		};
+		st7735s_reset: st7735s-reset {
+				fsl,pins = <
+                                MX6UL_PAD_CSI_DATA02__GPIO4_IO23   0x100b1
+                         >;
+			};
+		st7735s_dc: st7735s-dc {
+			fsl,pins = <
+                                MX6UL_PAD_CSI_DATA03__GPIO4_IO24   0x1b0b1
+                         >;
+			};
+		};				
+};
+&i2c2
+{
+	clock_frequency = <100000>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_i2c2>;
+	status = "okay";
+	mpu6050:mpu6050@68 {
+		compatible = "dar,mpu6050";
+		reg = <0x68>;
+		status = "okay";
+	};
+};
+&iomuxc {
+	imx6ul-evk {
+			pinctrl_i2c2:pinctrl-i2c2{
+			fsl,pins = <
+                                MX6UL_PAD_CSI_HSYNC__I2C2_SCL   0x4001b8b0
+								MX6UL_PAD_CSI_VSYNC__I2C2_SDA   0x4001b8b0
+                         >;
+			};
+		};				
+};
+&usdhc2 {
+	pinctrl-names = "default", "state_100mhz", "state_200mhz";
+	pinctrl-0 = <&pinctrl_usdhc2_8bit>;
+	pinctrl-1 = <&pinctrl_usdhc2_8bit_100mhz>;
+	pinctrl-2 = <&pinctrl_usdhc2_8bit_200mhz>;
+	bus-width = <8>;
+	non-removable;
+	status = "disabled";
+};
+
+&qspi {
+	status = "disabled";
+};
+&gpmi {
+	pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_nand>;
+	status = "okay";
+	partition@0{
+		label = "boot";
+		reg = <0x0000 0x400000>; /*4M*/
+	};
+	partition@1{
+		label = "logo";
+		reg = <0x400000 0x200000>; /*2M*/
+	};
+	partition@2{
+		label = "ENV";
+		reg = <0x600000 0x100000>; /*1M*/
+	};
+	partition@3{
+		label = "DTB";
+		reg = <0x700000 0x300000>; /*3M*/
+	};
+	partition@4{
+		label = "kernel";
+		reg = <0xa00000 0x800000>; /*8M*/
+	};
+	partition@5{
+		label = "rootfs";
+		reg = <0x1200000 0xee00000>;
+	};
+};

@@ -5,7 +5,7 @@
 槽函数本身是QT的一种机制，从QT4的signal和SLOT理解connect里面的槽函数，是一种触发型处理函数，可以被一个或多个信号链接触发，QT5里面少了参数，但是只要信号函数和槽函数一样，那么就可以带参数传递。其中界面里面的提升为槽也是一种触发型处理函数的机制。
 
 ```
-
+https://www.cnblogs.com/tgycoder/p/5274681.html//槽函数
 https://blog.csdn.net/SiriusWilliam/article/details/117483663（Qt中double与float与16进制字符串之间的转换）
 ```
 
