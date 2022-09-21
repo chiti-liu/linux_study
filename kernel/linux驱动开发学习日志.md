@@ -1363,3 +1363,38 @@ https://blog.csdn.net/jgw2008/article/details/52691568
 ```
 
 函数`devm_kzalloc`和`kzalloc`一样都是内核内存分配函数，但是`devm_kzalloc`是跟设备（装置）有关的，当设备（装置）被拆卸或者驱动（驱动程序）卸载（空载）时，内存会被自动释放。另外，当内存不再使用时，可以使用函数`devm_kfree（）`释放。而`kzalloc`没有自动释放的功能，用的时候需要小心使用，如果忘记释放，会造成内存泄漏。
+
+### regmap API
+
+Linux 下大部分设备的驱动开发都是操作其内部寄存器。
+
+如使用 i2c_transfer 来读写 I2C 设备中的寄存器，SPI 接口的话使用 spi_write/spi_read 等。
+
+**由于需要大量的寄存器操作，模型复用性会降低，所以引入了通用的regmap函数进行操作**
+
+regmap 是 Linux 内核为了减少慢速 I/O 在驱动上的冗余开销，提供了一种通用的接口来操 作硬件寄存器。
+
+另外，regmap 在驱动和硬件之间添加了 cache，降低了低速 I/O 的操作次数，提高了访问效率，缺点是实时性会降低。 
+
+**什么情况下会使用 regmap：**
+
+①、硬件寄存器操作，比如选用通过 I2C/SPI 接口来读写设备的内部寄存器，或者需要读 写 SOC 内部的硬件寄存器。 
+
+②、提高代码复用性和驱动一致性，简化驱动开发过程。 
+
+③、减少底层 I/O 操作次数，提高访问效率。
+
+**`regmap` 框架分为三层：** 
+
+①、底层物理总线：regmap 就是对不同的物理总线进行封装，目前 regmap 支持的物理总线有 `i2c、i3c、spi、mmio、sccb、sdw、slimbus、irq、spmi 和 w1`。
+
+②、regmap 核心层，用于实现 regmap，我们不用关心具体实现。 
+
+③、regmapAPI 抽象层，regmap 向驱动编写人员提供的 API 接口，驱动编写人员使用这些 API 接口来操作具体的芯片设备，也是驱动编写人员重点要掌握的。
+
+### IS_ERR& PTR_ERR& ERR_PTR
+
+```
+https://www.jianshu.com/p/36ed811e9a1b
+```
+
