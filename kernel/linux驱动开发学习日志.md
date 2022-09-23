@@ -1398,3 +1398,31 @@ regmap 是 Linux 内核为了减少慢速 I/O 在驱动上的冗余开销，提�
 https://www.jianshu.com/p/36ed811e9a1b
 ```
 
+```
+#define MAX_ERRNO   4095 //0xfff   -4095   0xfffff000  正好4K分配给错误空间
+
+#ifndef __ASSEMBLY__
+
+#define IS_ERR_VALUE(x) unlikely((x) >= (unsigned long)-MAX_ERRNO)
+
+static inline void * __must_check ERR_PTR(long error)
+{
+    return (void *) error;
+}
+
+static inline long __must_check PTR_ERR(const void *ptr)
+{
+    return (long) ptr;
+}
+
+static inline long __must_check IS_ERR(const void *ptr)
+{
+    return IS_ERR_VALUE((unsigned long)ptr);
+}
+
+static inline long __must_check IS_ERR_OR_NULL(const void *ptr)
+{
+    return !ptr || IS_ERR_VALUE((unsigned long)ptr);
+}
+```
+

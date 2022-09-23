@@ -1,5 +1,44 @@
 # Linux系统编程
 
+## man
+
+```
+https://www.cnblogs.com/oxspirt/p/8137675.html
+```
+
+Linux的man很强大，该手册分成很多section，使用man时可以指定不同的section来浏览，各个section意义如下： 
+1 - commands
+2 - system calls
+3 - library calls
+4 - special files
+5 - file formats and convertions
+6 - games for linux
+7 - macro packages and conventions
+8 - system management commands
+9 - 其他
+解释一下, 
+1、是普通的命令
+2、是系统调用,如open,write之类的(通过这个，至少可以很方便的查到调用这个函数，需要加什么头文件)
+3、是库函数,如printf,fread
+4、是特殊文件,也就是/dev下的各种设备文件
+5、是指文件的格式,比如passwd, 就会说明这个文件中各个字段的含义
+6、是给游戏留的,由各个游戏自己定义
+7、是附件还有一些变量,比如向environ这种全局变量在这里就有说明
+8、是系统管理用的命令,这些命令只能由root使用,如ifconfig
+想要指定section就直接在man的后面加上数字,比如 :
+
+```
+man 1 ls
+man 3 printf
+```
+
+
+对于像open,kill这种既有命令,又有系统调用的来说,man open则显示的是open(1),也就是从最前面的section开始,如果想查看open系统调用的话,就得man 2 open。
+
+关于库函数和系统调用。
+
+库函数是高层的，完全运行在用户空间， 为程序员提供调用真正的在幕后完成实际事务的系统调用的更方便的接口。系统调用在内核态运行并且由内核自己提供。标准C库函数`printf()` 可以被看做是一个通用的输出语句，但它实际做的是将数据转化为符合格式的字符串并且调用系统调用 `write()` 输出这些字符串。
+
 ## POSIX（统一接口）
 
 ```
@@ -38,13 +77,24 @@ ls -il	//列出所有信息包括inode
 
 ### 文件I/O
 
+标准输入、标准输出、标准错误  0、1、2
+
+```
+/* Standard file descriptors.  */
+#define	STDIN_FILENO	0	/* Standard input.  */
+#define	STDOUT_FILENO	1	/* Standard output.  */
+#define	STDERR_FILENO	2	/* Standard error output.  */
+```
+
 内核(页缓存区4K)和用户态IO交互
 
 int fd;
 
-fd = open(filepath,flags,mode) auth:wrx一般不用
+#### open
 
-#### flags
+fd = open(filepath,flags,mode/auth) auth:wrx一般不用
+
+##### flags
 
 ![image-20220922151900467](../typora-user-images/image-20220922151900467.png)
 
@@ -58,37 +108,23 @@ fd = open(filepath,flags,mode) auth:wrx一般不用
 
 调用这个标志打开文件会自动将偏移量定义到文件末尾
 
-#### mode
+##### mode/auth
 
 #### ![image-20220922152237345](../typora-user-images/image-20220922152237345.png)
 
+#### lseek
+
 lseek(fd,offset,whence)
+
+#### read & write
 
 write(fd,buffer,buf_len);
 
 read(fd,buf,buf_len);
 
+#### close
+
 close(fd);
-
-sync(fd)
-
-
-
-### 标准I/O
-
-用户态创建IO缓存区IO交互，提高系统性能
-
-fopen
-
-fwrite
-
-flseek
-
-fread
-
-fclose
-
-fflush
 
 ### errno
 
@@ -151,8 +187,214 @@ int dup2(oldfd,1)//重定向“标准输出文件描述符”到当前的文件�
 文件共享在进程间可能存在覆盖的风险，所以需要原子操作：
 
 - O_APPEND
-- pread&pwrite    传入偏移量，同步移动和写入，写完后，偏移量重置
+- pread&pwrite    传入偏移量，同步移动和写入，写完后，不会改变偏移量
 - O_EXCL    判断文件是否存在、创建文件，保证创建文件的步骤不会被重复执行。
+
+### 截断文件
+
+```
+#include <unistd.h>
+#include <sys/types.h>
+int truncate(const char *path, off_t length);
+int ftruncate(int fd, off_t length);//在此之前必须打开文件并获取到文件的可写权限
+
+```
+
+`ftruncate()`使用文件描述符 fd 来指定目标文件，而 `truncate()`则直接使用文件路 径 `path` 来指定目标文件，其功能一样。
+
+多则裁，少则补，调用后不改变偏移量。
+
+### fcntl & ioctl
+
+```
+#include <unistd.h>
+#include <fcntl.h>
+int fcntl(int fd, int cmd, ... /* arg */ )
+```
+
+![image-20220923102733503](../typora-user-images/image-20220923102733503.png)
+
+`cmd=F_SETFL` 时，需要传入第三个参数， 此参数表示需要设置的文件状态标志。
+
+这些标志指的就是我们在调用 open 函数时传入的 flags 标志，可以指定一个或多个（通过位或 | 运算 符组合），但是文件权限标志（`O_RDONLY、O_WRONLY、O_RDWR`）以及文件创建标志（`O_CREAT、 O_EXCL、O_NOCTTY、O_TRUNC`）不能被设置、会被忽略；在 Linux 系统中，只有 `O_APPEND、O_ASYNC、O_DIRECT、O_NOATIME 以及 O_NONBLOCK` 这些标志。
+
+```
+#include <sys/ioctl.h>
+int ioctl(int fd, unsigned long request, ...);
+```
+
+ioctl()可以认为是一个文件 IO 操作的杂物箱，可以处理的事情非常杂、不统一，一般用于操作特殊文件 或硬件外设，此函数将会在进阶篇中使用到，譬如可以通过 ioctl 获取 LCD 相关信息。
+
+### 标准I/O
+
+FILE*
+
+stdin   stdout stderr 
+
+![image-20220923112131449](../typora-user-images/image-20220923112131449.png)
+
+用户态创建IO缓存区IO交互，提高系统性能
+
+#### **fopen**
+
+```
+#include <stdio.h>
+FILE *fopen(const char *path, const char *mode);
+```
+
+##### 	**mode**
+
+- r+：可读可写 `O_RDWR`
+- w+：可读可写，不存在则创建，如果文件存在，则格式化为0后写入，`O_RDWR | O_CREAT | O_TRUNC`
+- a+：追加，可读写，不存在则创建`O_RDWR | O_CREAT | O_APPEND`
+- 默认权限：`S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH (0666)`
+
+#### **fwrite** & **fread**
+
+```
+#include  
+size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream); 
+size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
+//size为每个数据项的大小（多少字节），nmemb为有多少个数据项，所以传输的大小为size*nmemb
+```
+
+![image-20220923114250074](../typora-user-images/image-20220923114250074.png)
+
+#### **fseek**
+
+成功返回 0；发生错误将返回-1，并且会设置 errno 以指示错误原因；
+
+与 lseek()函数的返回值 意义不同，这里要注意！
+
+#### **fclose**
+
+#### 
+
+#### feof & ferror
+
+![image-20220923131640980](../typora-user-images/image-20220923131640980.png)
+
+### 格式化I/O
+
+```
+#include <stdio.h>
+int printf(const char *format, ...);
+int fprintf(FILE *stream, const char *format, ...);
+int dprintf(int fd, const char *format, ...);
+int sprintf(char *buf, const char *format, ...);
+int snprintf(char *buf, size_t size, const char *format, ...);
+
+int scanf(const char *format, ...);
+int fscanf(FILE *stream, const char *format, ...);
+int sscanf(const char *str, const char *format, ...);
+```
+
+### I/O缓冲
+
+用户缓冲区
+
+（交换区）
+
+内核缓冲区
+
+磁盘
+
+#### sync
+
+只有在对磁盘设备的写入操作完成之后，函数才会返回.
+
+```
+#include <unistd.h>
+
+void sync(void);//系统调用 sync()会将所有文件 I/O 内核缓冲区中的文件内容数据和元数据全部更新到磁盘设备中，该函数没有参数、也无返回值，意味着它不是对某一个指定的文件进行数据更新，而是刷新所有文件 I/O 内核缓冲区。linux中函数返回是在对磁盘设备的写入操作完成之后，其他系统只是调用一下I/O，并不等。
+
+int fsync(int fd)//系统调用 fsync()将参数 fd 所指文件的内容数据和元数据写入磁盘
+
+int fdatasync(int fd);//系统调用 fdatasync()与 fsync()类似，不同之处在于 fdatasync()仅将参数 fd 所指文件的内容数据写入磁盘，并不包括文件的元数据
+```
+
+![image-20220923142617373](../typora-user-images/image-20220923142617373.png)
+
+### 直接I/O
+
+绕过内核缓冲，O_DIRECT
+
+因为直接 I/O 涉及到对磁盘设备的直接访问，所以在执行直接 I/O 时，必须要遵守以下三个对齐限制要 求： 
+
+-  应用程序中用于存放数据的缓冲区，其内存起始地址必须以块大小的整数倍进行对齐； 
+- 写文件时，文件的位置偏移量必须是块大小的整数倍；
+- 写入到文件的数据大小必须是块大小的整数倍。
+
+如果不满足以上任何一个要求，调用 write()均为以错误返回 `Invalid argument`。
+
+以上所说的块大小指的 是磁盘设备的物理块大小（block size），常见的块大小包括 512 字节、1024 字节、2048 以及 4096 字节，那 我们如何确定磁盘分区的块大小呢？
+
+可以使用 tune2fs 命令进行查看，如下所示： `tune2fs -l /dev/sda1 | grep "Block size"`
+
+ -l 后面指定了需要查看的磁盘分区，可以使用 `df -h` 命令查看 Ubuntu 系统的根文件系统所挂载的磁盘分 区：
+
+```
+/** 使用宏定义 O_DIRECT 需要在程序中定义宏_GNU_SOURCE
+ ** 不然提示 O_DIRECT 找不到 
+ **/
+ 
+ /** 定义一个用于存放数据的 buf，起始地址以 4096 字节进行对其 **/
+static char buf[8192] __attribute((aligned (4096)));
+
+```
+
+直接 I/O 方式效率、性能比较低，绝大部分应用程序不会使用直接 I/O 方式对文件进行 I/O 操作，通常 只在一些特殊的应用场合下才可能会使用，那我们可以使用直接 I/O 方式来**测试磁盘设备的读写速率**，这种 测试方式相比普通 I/O 方式就会更加准确。
+
+### stdio缓冲
+
+- setvbuf
+
+  ```
+  #include <stdio.h>
+  int setvbuf(FILE *stream, char *buf, int mode, size_t size);
+  ```
+
+  ![image-20220923145518333](../typora-user-images/image-20220923145518333.png)
+
+- setbuf
+
+  ```
+  void setbuf(FILE *stream, char *buf);
+  
+  setvbuf(stream, buf, buf ? _IOFBF : _IONBF, BUFSIZ);//要么将 buf 设置为 NULL 以表示无缓冲，要么指向由调用者分配的 BUFSIZ 个字节大小的缓冲区（BUFSIZ 定义于头文件<stdio.h>中，该值通常为 8192）
+  ```
+
+- setbuffer
+
+  ```
+  void setbuffer(FILE *stream, char *buf, size_t size);
+  
+  setvbuf(stream, buf, buf ? _IOFBF : _IONBF, size);
+  ```
+
+- fflush
+
+  ```
+  int fflush(FILE *stream);
+  ```
+
+- 关闭文件时刷新stdio缓冲区
+
+  ```
+  fclose(stdout);
+  ```
+
+- 程序退出时刷新stdio缓冲区
+
+### 文件描述符与FILE指针互转
+
+```
+#include <stdio.h>
+int fileno(FILE *stream);
+FILE *fdopen(int fd, const char *mode);
+```
+
+
 
 ##  进程
 
