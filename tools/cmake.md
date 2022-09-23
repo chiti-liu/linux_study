@@ -290,7 +290,7 @@ cmake_minimum_required(VERSION 3.0)
 project (HELLO)
 
 # Add an executable
-add_executable(hello_cmake main.cpp)#g++ hello.cpp -o hello
+add_executable(hello_cmake main.cpp)#g++ hello.cpp -o hello_cmake
 ```
 
 #### 多目录工程 - 直接编译

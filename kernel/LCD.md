@@ -171,7 +171,7 @@ void *mmap(void *addr, size_t length, int prot, int flags,
 
 **这个函数返回新创建的页面的地址。**
 
-映射区域的首地址在addr中指定，length指定映射区域的长度。如果addr是NULL，那么**由内核来选择一个地址**来创建映射的区域,否则创建的时候会尽可能地使用addr的地址。在linux系统中，创建映射的时候应该是在下一个页面的边界创建,**addr是NULL的时候，程序的可移植性最好**。
+映射区域的首地址在addr中指定，length指定映射区域的长度。如果addr是NULL，那么**由内核来选择一个地址**来创建映射的区域,否则创建的时候会尽可能地使用addr的地址。在linux系统中，创建映射的时候应该是在下一个页面的边界创建，**addr是NULL的时候，程序的可移植性最好**。
 length指定文件被映射的长度。
 
 offset指定从文件的哪个偏移位置开始映射**，offset必须是页面大小的整数倍**，页面的大小可以由`sysconf(_SC_PAGE_SIZE)`来返回。

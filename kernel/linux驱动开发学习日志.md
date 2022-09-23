@@ -221,7 +221,7 @@ https://www.cnblogs.com/pengdonglin137/p/3286627.html
 
 设备插入主板后自动加载驱动，可以用udev/mdev，推荐用udev。
 
-使用modprobe前需要把设备驱动移入/lib/modules/$(uname -r)/ 中，并且depmod更行依赖。
+使用modprobe前需要把设备驱动移入/lib/modules/$(uname -r)/ 中，并且depmod更新依赖。
 
 ### container_of
 
@@ -950,7 +950,7 @@ https://blog.csdn.net/Aa_lihua/article/details/106064773
 
 ![image-20220824100806571](../typora-user-images/image-20220824100806571.png)
 
-dtc -I dtb -O dts *** .dtb > ***.dts反汇编
+dtc -I dtb -O dts *** .dtb > ***.dts反编译
 
 ![image-20220824100730798](../typora-user-images/image-20220824100730798.png)
 
