@@ -1,3 +1,5 @@
+
+
 # Linux系统编程
 
 ## man
@@ -394,9 +396,362 @@ int fileno(FILE *stream);
 FILE *fdopen(int fd, const char *mode);
 ```
 
+### 文件属性与目录
 
+linux有七种文件类型，按stat：
 
-##  进程
+- ‘-’: 普通文件
+  - 二进制文件
+  - 文本文件
+- 'd': 目录文件
+- 'c': 字符设备文件
+- 'b': 块设备文件
+- 'l':  符号链接文件
+- 's': 套接字文件
+- 'p'：管道文件
+
+#### stat函数
+
+```
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+int stat(const char *pathname, struct stat *buf);
+    pathname：用于指定一个需要查看属性的文件路径。
+    buf：struct stat 类型指针，用于指向一个 struct stat 结构体变量。调用 stat 函数的时候需要传入一个 struct stat 变量的指针，获取到的文件属性信息就记录在 struct stat 结构体中，稍后给大家介绍 struct stat 结构体中有记录了哪些信息。
+    返回值：成功返回 0；失败返回-1，并设置 error。
+
+```
+
+#### struct stat
+
+```
+struct stat
+{
+ dev_t st_dev; /* 文件所在设备的 ID */
+ ino_t st_ino; /* 文件对应 inode 节点编号 */
+ mode_t st_mode; /* 文件对应的模式 */
+ nlink_t st_nlink; /* 文件的链接数 */
+ uid_t st_uid; /* 文件所有者的用户 ID */
+ gid_t st_gid; /* 文件所有者的组 ID */
+ dev_t st_rdev; /* 设备号（指针对设备文件） */
+ off_t st_size; /* 文件大小（以字节为单位） */
+ blksize_t st_blksize; /* 文件内容存储的块大小 */
+ blkcnt_t st_blocks; /* 文件内容所占块数 */
+ struct timespec st_atim; /* 文件最后被访问的时间 */
+ struct timespec st_mtim; /* 文件内容最后被修改的时间 */
+ struct timespec st_ctim; /* 文件状态最后被改变的时间 */
+};
+```
+
+#### st_mode
+
+![image-20220927112538253](../typora-user-images/image-20220927112538253.png)
+
+```
+S_IRWXU 00700 owner has read, write, and execute permission
+S_IRUSR 00400 owner has read permission
+S_IWUSR 00200 owner has write permission
+S_IXUSR 00100 owner has execute permission
+S_IRWXG 00070 group has read, write, and execute permission
+S_IRGRP 00040 group has read permission
+S_IWGRP 00020 group has write permission
+S_IXGRP 00010 group has execute permission
+S_IRWXO 00007 others (not in group) have read, write, and execute permission
+S_IROTH 00004 others have read permission
+S_IWOTH 00002 others have write permission
+S_IXOTH 00001 others have execute permission
+```
+
+```
+S_IFSOCK 0140000 socket（套接字文件）
+S_IFLNK 0120000 symbolic link（链接文件）
+S_IFREG 0100000 regular file（普通文件）
+S_IFBLK 0060000 block device（块设备文件）
+S_IFDIR 0040000 directory（目录）
+S_IFCHR 0020000 character device（字符设备文件）
+S_IFIFO 0010000 FIFO（管道文件）
+```
+
+```
+/* 判断是不是普通文件 */
+if ((st.st_mode & S_IFMT) == S_IFREG) {
+/* 是 */
+}
+/* 判断是不是链接文件 */
+if ((st.st_mode & S_IFMT) == S_IFLNK) {
+/* 是 */
+}
+S_IFMT 宏是文件类型字段位掩码：
+S_IFMT 0170000
+```
+
+####  struct timespec
+
+```
+struct timespec
+{
+ time_t tv_sec; /* 秒 */
+ syscall_slong_t tv_nsec; /* 纳秒 */
+};
+```
+
+在 Linux 系统中，time_t 时间指的是一个时间段，从某一个时间点到某一个时间点所**经过**的秒数，譬如 对于文件的三个时间属性来说，指的是从过去的某一个时间点（这个时间点是一个**起始基准时间点**）到文件最后被访问、文件内容最后被修改、文件状态最后被改变的这个时间点所经过的秒数。time_t 时间在 Linux 下被称为日历时间.
+
+#### fstat & lstat
+
+```
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+int fstat(int fd, struct stat *buf);
+```
+
+fstat 与 stat 区别在于，stat 是从文件名出发得到文件属性信息，不需要先打开文件；而 fstat 函数则是从 文件描述符出发得到文件属性信息，所以使用 fstat 函数之前需要先打开文件得到文件描述符。
+
+```
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+int lstat(const char *pathname, struct stat *buf);
+```
+
+lstat()与 stat、fstat 的区别在于，对于符号链接文件，stat、fstat 查阅的是符号链接文件所指向的文件对 应的文件属性信息，而 lstat 查阅的是符号链接文件本身的属性信息。
+
+#### chown
+
+```
+#include <unistd.h>
+int chown(const char *pathname, uid_t owner, gid_t group);
+```
+
+#### access
+
+用户权限检查
+
+```
+#include <unistd.h>
+int access(const char *pathname, int mode);
+⚫ F_OK：检查文件是否存在
+⚫ R_OK：检查是否拥有读权限
+⚫ W_OK：检查是否拥有写权限
+⚫ X_OK：检查是否拥有执行权限
+除了可以单独使用之外，还可以通过按位或运算符" | "组合在一起。
+返回值：检查项通过则返回 0，表示拥有相应的权限并且文件存在；否则返回-1，如果多个检查项组合在一起，只要其中任何一项不通过都会返回-1。
+
+```
+
+#### umask
+
+umask 权限掩码是进程的一种属性，用于指明该进程新建文件或目录时，应屏蔽哪些权限位。进程的 umask 通常继承至其父进程.
+
+```
+#include <sys/types.h>
+#include <sys/stat.h>
+mode_t umask(mode_t mask);
+```
+
+## 系统信息与资源
+
+### 系统信息
+
+- uname     //获取有关当前操作系统内核的名称和信息
+
+  ```
+  #include <sys/utsname.h>
+  int uname(struct utsname *buf);
+  
+  struct utsname {
+       char sysname[]; /* 当前操作系统的名称 */
+       char nodename[]; /* 网络上的名称（主机名） */
+       char release[]; /* 操作系统内核版本 */
+       char version[]; /* 操作系统发行版本 */
+       char machine[]; /* 硬件架构类型 */
+       #ifdef _GNU_SOURCE
+       char domainname[];/* 当前域名 */
+       #endif
+  };
+  
+  ```
+
+- sysinfo      //获取系统统计信息
+
+  ```
+  #include <sys/sysinfo.h>
+  int sysinfo(struct sysinfo *info);
+  ```
+
+- gethostname    //=struct utsname.nodename获取主机名
+
+  ```
+  #include <unistd.h>
+  int gethostname(char *name, size_t len);
+  ```
+
+- sysconf       //可在运行时获取系统的一些配置信息，譬如页大小（page size）、主机名 的最大长度、进程可以打开的最大文件数、每个用户 ID 的最大并发进程数等。
+
+  ```
+  #include <unistd.h>
+  long sysconf(int name);
+  ```
+
+- 时间
+
+  - jiffies
+
+  - time进程
+
+    ```
+    #include <time.h>
+    time_t time(time_t *tloc);
+    ```
+
+  - gettimeofday     //time()获取到的时间只能精确到秒，如果想要获取更加精确的时间可以使用系统调用 gettimeofday 来实 现，gettimeofday()函数提供微秒级时间精度.
+
+    ```
+    #include <sys/time.h>
+    int gettimeofday(struct timeval *tv, struct timezone *tz);
+    ```
+
+  - 时间转换函数
+
+    - ctime
+
+      ```
+      #include <time.h>
+      char *ctime(const time_t *timep);
+      char *ctime_r(const time_t *timep, char *buf);
+      ```
+
+    - localtime
+
+      ```
+      #include <time.h>
+      struct tm *localtime(const time_t *timep);
+      struct tm *localtime_r(const time_t *timep, struct tm *result);
+      ```
+
+    - gmtime
+
+      ```
+      #include <time.h>
+      struct tm *gmtime(const time_t *timep);
+      struct tm *gmtime_r(const time_t *timep, struct tm *result);
+      ```
+
+    - mktime
+
+      ```
+      #include <time.h>
+      time_t mktime(struct tm *tm);
+      ```
+
+    - asctime
+
+      ```
+      #include <time.h>
+      char *asctime(const struct tm *tm);
+      char *asctime_r(const struct tm *tm, char *buf);
+      ```
+
+      ![image-20220927144302667](../typora-user-images/image-20220927144302667.png)
+
+### 进程时间
+
+### 休眠
+
+- sleep 
+
+  ```
+  #include <unistd.h>
+  unsigned int sleep(unsigned int seconds);
+  ```
+
+- usleep
+
+  ```
+  #include <unistd.h>
+  int usleep(useconds_t usec);
+  ```
+
+- nanosleep
+
+  ```
+  #include <time.h>
+  int nanosleep(const struct timespec *req, struct timespec *rem);
+  ```
+
+### 申请堆空间
+
+```
+#include <stdlib.h>
+void *malloc(size_t size);
+void free(void *ptr);
+void *calloc(size_t nmemb, size_t size);//calloc()在堆中动态地分配 nmemb 个长度为 size 的连续空间，并将每一个字节都初始化为 0。所以它的结果是分配了 nmemb * size 个字节长度的内存空间，并且每个字节的值都是 0。
+
+int posix_memalign(void **memptr, size_t alignment, size_t size);
+void *aligned_alloc(size_t alignment, size_t size);
+void *valloc(size_t size);
+
+#include <malloc.h>
+
+void *memalign(size_t alignment, size_t size);
+void *pvalloc(size_t size);
+```
+
+free调用问题
+
+Linux 系统中，当一个进程终止时，内核会自动关闭 它没有关闭的所有文件（该进程打开的文件，但是在进程终止时未调用 close()关闭它）。
+
+同样，对于内存来 说，也是如此！当进程终止时，内核会将其占用的所有内存都返还给操作系统，这包括在堆内存中由 malloc() 函数所分配的内存空间。
+
+基于内存的这一自动释放机制，很多应用程序通常会省略对 free()函数的调用。 
+
+这在程序中分配了多块内存的情况下可能会特别有用，因为加入多次对 free()的调用不但会消耗品大量 的 CPU 时间，而且可能会使代码趋于复杂。
+
+ 虽然依靠终止进程来自动释放内存对大多数程序来说是可以接受的，但最好能够在程序中显式调用 free()释放内存，
+
+首先其一，显式调用 free()能使程序具有更好的可读性和可维护性；
+
+其二，对于很多程序来 说，申请的内存并不是在程序的生命周期中一直需要，大多数情况下，都是根据代码需求动态申请、释放的， 如果申请的内存对程序来说已经不再需要了，那么就已经把它释放、归还给操作系统，如果持续占用，将会导致内存泄漏，也就是人们常说的“你的程序在吃内存”！
+
+### proc文件系统
+
+proc 文件系统是一个虚拟文件系统，它以文件系统的方式为应用层访问系统内核数据提供了接口，用 户和应用程序可以通过 proc 文件系统得到系统信息和进程相关信息，对 proc 文件系统的读写作为与内核 进行通信的一种手段。
+
+但是与普通文件不同的是，proc 文件系统是动态创建的，文件本身并不存在于磁盘 当中、只存在于内存当中,与 devfs 一样，都被称为虚拟文件系统。
+
+/proc 目录下除了文件夹之外，还有很多的虚拟文件，譬如 buddyinfo、cgroups、cmdline、version 等等， 不同的文件记录了不同信息，关于这些文件记录的信息和意思如下：
+
+⚫ cmdline：内核启动参数；
+
+⚫ cpuinfo：CPU 相关信息； 
+
+⚫ iomem：IO 设备的内存使用情况；
+
+⚫ interrupts：显示被占用的中断号和占用者相关的信息；
+
+⚫ ioports：IO 端口的使用情况； 
+
+⚫ kcore：系统物理内存映像，不可读取； 
+
+⚫ loadavg：系统平均负载； 
+
+⚫ meminfo：物理内存和交换分区使用情况； 
+
+⚫ modules：加载的模块列表； 
+
+⚫ mounts：挂载的文件系统列表； 
+
+⚫ partitions：系统识别的分区表； 
+
+⚫ swaps：交换分区的利用情况； 
+
+⚫ version：内核版本信息； 
+
+⚫ uptime：系统运行时间；
+
+## 进程与线程
 
 pid_t fork()函数
 
@@ -762,7 +1117,7 @@ killall按照进程名称终止进程 例如： killall vim
 
 ## IPC（进程间通信） 
 
-\#### 进程间通信
+### 进程间通信
 
 \- 数据传输
 
@@ -772,13 +1127,20 @@ killall按照进程名称终止进程 例如： killall vim
 
 \- 进程控制
 
-\#### Linux系统下的ipc
+###  Linux系统下的ipc
 
 \- 早期unix系统ipc
 
  \- 管道
 
  \- 信号
+
+```
+#include <signal.h>
+typedef void (*sig_t)(int);
+sig_t signal(int signum, sig_t handler);
+int sigaction(int signum, const struct sigaction *act, struct sigaction *oldact);
+```
 
  \- fifo
 
@@ -800,21 +1162,18 @@ killall按照进程名称终止进程 例如： killall vim
 
  \- posix 共享内存
 
- 
+####  管道
 
-\#include <unistd.h>
-
+```
+#include <unistd.h>
 函数原型:
-
 int pipe(int pipefd[2]);
+    返回值:
+    成功:0
+    失败:-1
+```
 
-返回值:
-
-成功:0
-
-失败:-1
-
-\#### 特点
+特点
 
 \- 特殊文件(没有名字)，无法使用open，但是可以使用close。
 
@@ -824,7 +1183,7 @@ int pipe(int pipefd[2]);
 
 \- 所有文件描述符被关闭之后，无名管道被销毁
 
-\#### 使用步骤
+使用步骤
 
 \- 父进程pipe无名管道
 
@@ -838,21 +1197,19 @@ int pipe(int pipefd[2]);
 
  
 
-\#include <sys/types.h>
-
-\#include <sys/state.h>
+```
+#include <sys/types.h>
+#include <sys/state.h>
 
 函数原型:
-
 int mkfifo(const char *filename,mode_t mode)
 
 返回值:
+    成功:0
+    失败:-1
+```
 
-成功:0
-
-失败:-1
-
-\#### 特点
+特点
 
 \- 有文件名，可以使用open函数打开
 
@@ -874,7 +1231,7 @@ int mkfifo(const char *filename,mode_t mode)
 
 \- close有名管道
 
- 
+####  信号
 
 | 信号名 | 信号编号 | 产生原因   | 默认处理方式    |
 
@@ -908,85 +1265,59 @@ int mkfifo(const char *filename,mode_t mode)
 
  
 
-kill pid
-
-killall\pkill name
-
- 
-
+```
 include<signal.h>
 
 函数原型:
-
 typedef void (*sighandler_t)(int);
-
 sighandler_t signal(int signum,sighandler_t handler);
 
 参数:
-
-\- signum： 要设置的信号
-
-\- handler：
-
+- signum： 要设置的信号
+- handler：
  \- SIG_IGN：忽略
-
  \- SIG_DFL：默认
-
  \- void (*sighandler_t)(int)：自定义
 
 返回值：
+    成功：上一次设置的handler
+    失败：SIG_ERR
+```
 
-成功：上一次设置的handler
+- kill           //函数kill不做字面意思，只传递信号
 
-失败：SIG_ERR
 
-\#### kill函数（kill不做字面意思，只传递信号）
-
-头文件:
-
-\#include <sys/types.h>
-
-\#include <signal.h>
+```
+#include <sys/types.h>
+#include <signal.h>
 
 原型函数:
-
 int kill(pid_t pid,int sig);
-
 参数:
-
-\- pid：进程id
-
-\- sig：要发送的信号
-
+    - pid：进程id
+    - sig：要发送的信号
 返回值:
+    成功：0
+    失败：-1
+```
 
-成功：0
+-  raise函数（自己阻塞自己）
 
-失败：-1
-
-\#### raise函数（自己阻塞自己）
 
 头文件:
 
-\#include <signal.h>
-
+```
+#include <signal.h>
 原型函数:
-
 int raise(int sig);
-
 参数:
-
-sig：发送信号
-
+    sig：发送信号
 返回值：
+    成功：0
+    失败：非0
+```
 
-成功：0
-
-失败：非0
-
- 
-
-\#### 屏蔽信号集
+-  屏蔽信号集
 
 屏蔽某些信号
 
@@ -1004,39 +1335,31 @@ sig：发送信号
 
 \#### 信号集相关API
 
-\- int sigemptyset(sigset_t *set);
+```
+int sigemptyset(sigset_t *set);
+ 将信号集合初始化为0
 
- \- 将信号集合初始化为0
+int sigfillset(sigset_t *set);
+将信号集合初始化为1
 
-\- int sigfillset(sigset_t *set);
+int sigaddset(sigset_t *set,int signum);
+ 将信号集合某一位设置为1
 
- \- 将信号集合初始化为1
+int sigdelset(sigset_t *set,int signum);
+将信号集合某一位设置为0
 
-\- int sigaddset(sigset_t *set,int signum);
+int sigprocmask(int how,const sigset_t *set,sigset_t *oldset);
+ 使用设置好的信号集去修改信号屏蔽集
+ 参数how:
+    SIG_BLOCK:屏蔽某个信号(屏蔽集 | set)
+    SIG_UNBLOCK:打开某个信号(屏蔽集 & (~set))
+ 参数oldset：
+    保存旧的屏蔽集的值，NULL表示不保存
+```
 
- \- 将信号集合某一位设置为1
 
-\- int sigdelset(sigset_t *set,int signum);
 
- \- 将信号集合某一位设置为0
-
-\- int sigprocmask(int how,const sigset_t *set,sigset_t *oldset);
-
- \- 使用设置好的信号集去修改信号屏蔽集
-
- \- 参数how:
-
-  \- SIG_BLOCK:屏蔽某个信号(屏蔽集 | set)
-
-  \- SIG_UNBLOCK:打开某个信号(屏蔽集 & (~set))
-
-  \- SIG_SETMASK:屏蔽集 = set
-
- \- 参数oldset：保存旧的屏蔽集的值，NULL表示不保存
-
- 
-
-\#### system-V ipc特点
+### system-V ipc特点
 
 \- 独立于进程
 
@@ -1044,7 +1367,7 @@ sig：发送信号
 
 \- IPC对象具有key和ID
 
-\#### 消息队列用法
+#### 消息队列用法
 
 \- 定义一个唯一key(ftok)
 
@@ -1056,139 +1379,113 @@ sig：发送信号
 
 \- 删除消息队列(msgctl)
 
-\#### ftok函数
+####  ftok函数
 
 功能：获取一个key
 
 函数原型：
 
+```
 key_t ftok(const char *path,int proj_id)
-
 参数：
-
-\- path：一个合法路径
-
-\- proj_id：一个整数
+ path：一个合法路径
+ proj_id：一个整数
 
 返回值
+    成功：合法键值
+    失败：-1
+```
 
-成功：合法键值
 
-失败：-1
 
-\#### msgget函数
+#### msgget函数
 
 功能：获取消息队列ID
 
 函数原型：
 
+```
 int msgget(key_t key,int msgflg)
 
 参数：
-
-\- key：消息队列的键值
-
-\- msgflg：
-
- \- IPC_CREAT：如果消息队列不存在，则创建
-
- \- mode：访问权
-
+ key：消息队列的键值
+ msgflg：
+    IPC_CREAT：如果消息队列不存在，则创建
+    mode：访问权
 返回值：
+    成功：该消息队列的ID
+    失败：-
+```
 
-成功：该消息队列的ID
 
-失败：-
 
-\#### msgsnd函数
+#### msgsnd函数
 
 功能：发送消息到消息队列
 
 函数原型：
 
+```
 int msgsnd(int msqid,const void *msgp,size_t msgsz,int msgflg);
 
 参数：
-
-\- msqid：消息队列ID
-
-\- msgp：消息缓存区
-
- \- struct msgbuf
-
+msqid：消息队列ID
+msgp：消息缓存区
+ struct msgbuf
   {
-
    long mtype;  //消息标识
-
    char mtext[1]; //消息内容
-
   }
-
-\- msgsz：消息正文的字节数
-
-\- msgflg：
-
- \- IPC_NOWAIT：非阻塞发送
-
- \- 0：阻塞发送
-
+msgsz：消息正文的字节数
+msgflg：
+	IPC_NOWAIT：非阻塞发送
+	 0：阻塞发送
 返回值：
+    成功：0
+    失败：-1
+```
 
-成功：0
 
-失败：-1
 
-\#### msgrcv函数
+#### msgrcv函数
 
+```
 功能：从消息队列读取消息
-
 函数原型：
-
 ssize_t msgrcv(int msqid,void *msgp,size_t msgsz,long msgtyp,int msgflg)
 
 参数：
-
-\- msqid：消息队列I
-
-\- msgp：消息缓存区
-
-\- msgsz：消息正文的字节数
-
-\- msgtyp：要接受消息的标识
-
-\- msgflg：
-
- \- IPC_NOWAIT：非阻塞读取
-
- \- MSG_NOERROR：截断消息
-
- \- 0：阻塞读取
+msqid：消息队列I
+msgp：消息缓存区
+msgsz：消息正文的字节数
+msgtyp：要接受消息的标识
+msgflg：
+    IPC_NOWAIT：非阻塞读取
+    MSG_NOERROR：截断消息
+    0：阻塞读取
 
 返回值：
-
 成功：0
-
 失败：-1
+```
 
-\#### msgctl函数
+
+
+#### msgctl函数
 
 功能：设置或获取消息队列的相关属性
 
 函数原型：
 
+```
 int msgctl(int msgqid,int cmd,struct maqid_ds *buf)
-
-\- msgqid：消息队列的ID
-
-\- cmd
-
- \- IPC_STAT：获取消息队列的属性信息
-
- \- IPC_SET：设置消息队列的属性
-
- \- IPC_RMID：删除消息队列
-
-\- buf：相关结构体缓冲区
+msgqid：消息队列的ID
+cmd
+    IPC_STAT：获取消息队列的属性信息
+    IPC_SET：设置消息队列的属性
+    IPC_RMID：删除消息队列
+buf：相关结构体缓冲区
+```
 
  
 
@@ -1205,3 +1502,110 @@ int msgctl(int msgqid,int cmd,struct maqid_ds *buf)
 进程和信号的关系及处理逻辑？
 
 ## Network（网络编程）
+
+![image-20220927155008000](../typora-user-images/image-20220927155008000.png)
+
+别名：socket编程
+
+### socket
+
+```
+#include <sys/types.h> /* See NOTES */
+#include <sys/socket.h>
+int socket(int domain, int type, int protocol);
+```
+
+socket()函数类似于 open()函数，它用于创建一个网络通信端点（打开一个网络通信），如果成功则返回 一个网络文件描述符，通常把这个文件描述符称为 socket 描述符（socket descriptor），这个 socket 描述符跟 文件描述符一样，后续的操作都有用到它，把它作为参数，通过它来进行一些读写操作。
+
+![image-20220927160909296](../typora-user-images/image-20220927160909296.png)
+
+![image-20220927161005476](../typora-user-images/image-20220927161005476.png)
+
+![image-20220927161135233](../typora-user-images/image-20220927161135233.png)
+
+### bind
+
+```
+int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+struct sockaddr_in {
+     sa_family_t sin_family; /* 协议族 */
+     in_port_t sin_port; /* 端口号 */
+     struct in_addr sin_addr; /* IP 地址 */
+     unsigned char sin_zero[8];
+};
+
+eg:
+struct sockaddr_in socket_addr;
+memset(&socket_addr, 0x0, sizeof(socket_addr)); //清零
+//填充变量
+socket_addr.sin_family = AF_INET;
+socket_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+socket_addr.sin_port = htons(5555);
+//将地址与套接字进行关联、绑定
+bind(socket_fd, (struct sockaddr *)&socket_addr, sizeof(socket_addr));
+```
+
+### listen
+
+listen()函数只能在服务器进程中使用，让服务器进程进入监听状态，等待客户端的连接请求，listen()函 数在一般在 bind()函数之后调用，在 accept()函数之前调用
+
+```
+ int listen(int sockfd, int backlog);
+```
+
+### accept
+
+服务器调用 listen()函数之后，就会进入到监听状态，等待客户端的连接请求，使用 accept()函数获取客 户端的连接请求并建立连接。
+
+```
+ int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen); 
+```
+
+#### 服务器进入流程
+
+为了能够正常让客户端能正常连接到服务器，服务器必须遵循以下处理流程：
+
+①、调用 socket()函数打开套接字； 
+
+②、调用 bind()函数将套接字与一个端口号以及 IP 地址进行绑定； 
+
+③、调用 listen()函数让服务器进程进入监听状态，监听客户端的连接请求； 
+
+④、调用 accept()函数处理到来的连接请求。
+
+### connect
+
+```
+ int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen); 
+```
+
+该函数用于客户端应用程序中，客户端调用 connect()函数将套接字 sockfd 与远程服务器进行连接，参 数 addr 指定了待**连接的服务器的 IP 地址以及端口号**等信息，参数 addrlen 指定了 addr 指向的 struct sockaddr 对象的字节大小。
+
+ 客户端通过 connect()函数请求与服务器建立连接，对于 TCP 连接来说，调用该函数将发生 TCP 连接的 **握手过程**，并最终建立一个 TCP 连接。
+
+而对于 UDP 协议来说，调用这个函数只是在 sockfd 中记录服务器 IP 地址与端口号，而不发送任何数据。
+
+ 函数调用成功则返回 0，失败返回-1，并设置 errno 以指示错误原因。
+
+### 发送&接收API
+
+- read
+- recv
+- write
+- aend
+
+### 记住不用时调用close释放资源
+
+### IP地址格式转换
+
+```
+#include <arpa/inet.h>
+int inet_pton(int af, const char *src, void *dst);//将点分十进制表示的字符串形式转换成二进制 Ipv4 或 Ipv6 地址。
+const char *inet_ntop(int af, const void *src, char *dst, socklen_t size);
+ntohs =net to host short int 16位
+htons=host to net short int 16位
+ntohl =net to host long int 32位
+htonl=host to net long int 32位
+htonl()表示将32位的主机字节顺序转化为32位的网络字节顺序 htons()表示将16位的主机字节顺序转化为16位的网络字节顺序（ip地址是32位的端口号是16位的 ）
+```
+
