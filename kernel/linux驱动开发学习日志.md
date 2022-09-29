@@ -1,5 +1,26 @@
 # <<linux 驱动开发>>学习日志
 
+- arch：包含和硬件体系结构相关的代码，每种平台占一个相应的目录，如 i386、arm、arm64、powerpc、mips 等。Linux 内核目前已经支持 30 种左右的体系结构。在 arch 目录下，存放的是各个平台以及各个平台的芯片对 Linux 内核进程调度、内存管理、中断等的支持，以及每个具体的 SoC 和电路板的板级支持代码。
+- block：块设备驱动程序 I/O 调度。
+- crypto：常用加密和散列算法（如 AES、SHA 等），还有一些压缩和 CRC 校验算法。
+- documentation：内核各部分的通用解释和注释。
+- drivers：设备驱动程序，每个不同的驱动占用一个子目录，如 char、block、net、mtd、i2c 等。
+- fs：所支持的各种文件系统，如 EXT、FAT、NTFS、JFFS2 等。
+- include：头文件，与系统相关的头文件放置在 include/linux 子目录下。
+- init：内核初始化代码。著名的 start_kernel（）就位于 init/main.c 文件中。
+- ipc：进程间通信的代码。
+- kernel：内核最核心的部分，包括进程调度、定时器等，而和平台相关的一部分代码放在 arch/*/kernel 目录下。
+- lib：库文件代码。
+- mm：内存管理代码，和平台相关的一部分代码放在 arch/*/mm 目录下。
+- net：网络相关代码，实现各种常见的网络协议。
+- scripts：用于配置内核的脚本文件。
+- security：主要是一个 SELinux 的模块。
+- sound：ALSA、OSS 音频设备的驱动核心代码和常用设备驱动。
+- usr：实现用于打包和压缩的 cpio 等。
+- include：内核 API 级别头文件。
+
+内核一般要做到 drivers 与 arch 的软件架构分离，驱动中不包含板级信息，让驱动跨平台。同时内核的通用部分（如 kernel、fs、ipc、net 等）则与具体的硬件（arch 和 drivers）剥离。
+
 ```
 MODULE_LICENSE（“GPL”）//申明采用了开源协议，可以使用一些开源GPL代码API
 _init/_exit   在加载前占据内存，加载完后自动销毁留出空间
@@ -229,7 +250,7 @@ https://www.cnblogs.com/pengdonglin137/p/3286627.html
 https://www.linuxidc.com/Linux/2012-02/53701.htm#:~:text=containe,%E9%87%8F%E7%9A%84%E6%8C%87%E9%92%88%E7%9A%84%E5%8A%9F%E8%83%BD%E3%80%82
 ```
 
-根据数据成员的地址确定包含该数据成员结构体的地址
+根据**数据成员的地址**确定**包含该数据成员结构体**的地址
 
 ### 驱动编写步骤
 
@@ -584,7 +605,7 @@ Linux 内核使用全局变量 jiffies 来记录系统从启动以来的系统�
 
 `jiffies_64` 和 `jiffies` 其实是同一个东西，`jiffies_64` 用于 64 位系统，而 `jiffies` 用于 32 位系统。 为了兼容不同的硬件，`jiffies` 其实就是 `jiffies_64` 的低 32 位。
 
-假如 HZ 为最大 值 1000 的时候，`32 位的 jiffies` 只需要 49.7 天就发生了绕回，对于 `64 位的 jiffies` 来说大概需要 5.8 亿年才能绕回，因此 `jiffies_64` 的绕回忽略不计。处理 `32 位 jiffies` 的绕回显得尤为重要， Linux 内核提供了如表 50.1.1.1 所示的几个 API 函数来处理绕回。
+假如 HZ 为最大值 1000 的时候，`32 位的 jiffies` 只需要 49.7 天就发生了绕回，对于 `64 位的 jiffies` 来说大概需要 5.8 亿年才能绕回，因此 `jiffies_64` 的绕回忽略不计。处理 `32 位 jiffies` 的绕回显得尤为重要， Linux 内核提供了如表 50.1.1.1 所示的几个 API 函数来处理绕回。 
 
 ![image-20220919164332088](../typora-user-images/image-20220919164332088.png)
 
@@ -1269,6 +1290,7 @@ https://linux-kernel-labs.github.io/refs/heads/master/lectures/debugging.html#de
 - addr2line：定位到出错的文件和行
 - objdump：反汇编定义到发生位置前后
 - gdb：自己去调式发生错误所在位置
+- 额外加一个printk大法好。
 
 **注意：还有另一种Segment kernel  调式方式不一样**
 
@@ -1426,3 +1448,33 @@ static inline long __must_check IS_ERR_OR_NULL(const void *ptr)
 }
 ```
 
+### oops
+
+```
+https://www.cnblogs.com/wwang/archive/2010/11/14/1876735.html
+```
+
+ \* error_code:
+ \*   bit 0 == 0 means no page found, 1 means protection fault
+ \*   bit 1 == 0 means read, 1 means write
+ \*   bit 2 == 0 means kernel, 1 means user-mode
+ \*    bit 3 == 0 means data, 1 means instruction
+
+有时候，Oops还会打印出Tainted信息。这个信息用来指出内核是因何种原因被tainted（直译为“玷污”）。具体的定义如下：
+
+> ```
+>  1: 'G' if all modules loaded have a GPL or compatible license, 'P' if any proprietary module has been loaded.  Modules without a MODULE_LICENSE or with a MODULE_LICENSE that is not recognised by insmod as GPL compatible are assumed to be proprietary.
+>  2: 'F' if any module was force loaded by "insmod -f", ' ' if all modules were loaded normally.
+>  3: 'S' if the oops occurred on an SMP kernel running on hardware that hasn't been certified as safe to run multiprocessor. Currently this occurs only on various Athlons that are not SMP capable.
+>  4: 'R' if a module was force unloaded by "rmmod -f", ' ' if all modules were unloaded normally.
+>  5: 'M' if any processor has reported a Machine Check Exception, ' ' if no Machine Check Exceptions have occurred.
+>  6: 'B' if a page-release function has found a bad page reference or some unexpected page flags.
+>  7: 'U' if a user or user application specifically requested that the Tainted flag be set, ' ' otherwise.
+>  8: 'D' if the kernel has died recently, i.e. there was an OOPS or BUG.
+>  9: 'A' if the ACPI table has been overridden.
+>  10: 'W' if a warning has previously been issued by the kernel. (Though some warnings may set more specific taint flags.)
+>  11: 'C' if a staging driver has been loaded.
+>  12: 'I' if the kernel is working around a severe bug in the platform firmware (BIOS or similar).
+> ```
+>
+> 
