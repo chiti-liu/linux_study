@@ -5,6 +5,14 @@
 - 方便我们使用硬件，如使用显存
 - 高效的使用硬件，如开多个终端
 
+### 实验
+
+```
+https://zhuanlan.zhihu.com/p/452389902
+```
+
+
+
 ### 管理
 
 - CPU管理
@@ -248,6 +256,10 @@ counter	1.时间片作用	2.优先级作用
 ![image-20220909145402596](../typora-user-images/image-20220909145402596.png)
 
 #### 调度
+
+```
+https://blog.csdn.net/m0_37568521/article/details/104883433
+```
 
 FIFO
 
