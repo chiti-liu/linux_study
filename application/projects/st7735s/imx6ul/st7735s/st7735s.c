@@ -81,8 +81,8 @@
 
 #define ST7735S_DEVICE_NAME "st7735s"
 
-#define SPI_SPEED_HZ	4000000
-#define REFRESHRATE	15
+#define SPI_SPEED_HZ	20000000
+#define REFRESHRATE	30
 #define MAX_PALETTE	16
 #define BPP	16
 
@@ -170,18 +170,18 @@ static const u8 init_cmds3[] = {
 	ST7735S_DISPON, DELAY,	// 4: Main screen turn on, no args w/delay
 	100
 };
-static struct task_struct *st7735s_thread;
+
 struct st7735s {
 	struct spi_device *spi;
 	struct gpio_desc *gpiod_reset;
 	struct gpio_desc *gpiod_dc;
+	// struct gpio_desc *gpiod_cs;
 	struct fb_info *lcd_info;
 	struct mutex io_lock;
 	u32 height;
 	u32 width;
 	u16 *ssbuf;
 };
-
 static void st7735s_reset(struct st7735s *lcd)
 {
 	gpiod_set_value(lcd->gpiod_reset, 0);
@@ -246,19 +246,17 @@ static void st7735s_set_address_window(struct st7735s *lcd, u8 x0, u8 y0,
 	st7735s_write_command(lcd, ST7735S_RAMWR);
 }
 
-static int st7735s_update_screen(void *param)
+static void st7735s_update_screen(struct st7735s *lcd)
 {
-	struct st7735s *lcd = (struct st7735s *)param;
-	u16 *vmem;
+	// u16 *vmem = lcd->ssbuf;
 	int i;
 
 	//vmem = (u16 *)lcd->lcd_info->screen_base;
 
 	u16 *vmem16 = (u16 *)lcd->lcd_info->screen_base;
-	vmem = lcd->ssbuf;
 
 	for (i = 0; i < ST7735S_WIDTH * ST7735S_HEIGHT * BPP / 8 / 2; i++)
-		vmem[i] = swab16(vmem16[i]);
+		lcd->ssbuf[i] = swab16(vmem16[i]);
 
 	mutex_lock(&(lcd->io_lock));
 
@@ -267,28 +265,26 @@ static int st7735s_update_screen(void *param)
 						ST7735S_HEIGHT - 1);
 
 	/* Blast framebuffer to ST7735 internal display RAM */
-	st7735s_write_data(lcd, (u8 *)vmem,
+	st7735s_write_data(lcd, (u8 *)(lcd->ssbuf),
 		ST7735S_WIDTH * ST7735S_HEIGHT * BPP / 8);
 
 	mutex_unlock(&(lcd->io_lock));
-
-	return 0;
 }
 
 static void st7735s_load_image(struct st7735s *lcd, const u8 *image)
 {
-	u16 *vmem;
+	// u16 *vmem = lcd->ssbuf;
 	int i;
 
 	u16 *vmem16 = (u16 *)image;
-	vmem = lcd->ssbuf;
 
 	for (i = 0; i < ST7735S_WIDTH * ST7735S_HEIGHT * BPP / 8 / 2; i++)
-		vmem[i] = swab16(vmem16[i]);
+		lcd->ssbuf[i] = swab16(vmem16[i]);
+		 //ssbuf[i] = ((vmem16[i]&0xff00)>>8)|((vmem16[i]&0x00ff)<<8);
 
-	memcpy(lcd->lcd_info->screen_base, (u8 *)vmem, ST7735S_WIDTH *
+	memmove(lcd->lcd_info->screen_base, (u8 *)(lcd->ssbuf), ST7735S_WIDTH *
 		ST7735S_HEIGHT * BPP / 8);
-	st7735s_update_screen((void *)lcd);
+	st7735s_update_screen(lcd);
 }
 
 static ssize_t st7735sfb_write(struct fb_info *info, const char __user *buf,
@@ -451,15 +447,14 @@ static struct fb_ops st7735sfb_ops = {
 	.fb_setcolreg	= st7735sfb_setcolreg,
 };
 
-// static void st7735sfb_deferred_io(struct fb_info *info,
-// 				struct list_head *pagelist)
-// {
-// 	st7735s_update_screen((void*)info->par);
-// }
+static void st7735sfb_deferred_io(struct fb_info *info,
+				struct list_head *pagelist)
+{
+	st7735s_update_screen(info->par);
+}
 
 static int st7735s_probe(struct spi_device *spi)
 {
-	dma_addr_t phy_addr;
 	struct st7735s *lcd;
 	int ret = 0;
 	struct gpio_desc *gpiod;
@@ -467,20 +462,32 @@ static int st7735s_probe(struct spi_device *spi)
 	u32 vmem_size = 0;
 	//u8 *vmem;
 	struct fb_deferred_io *st7735sfb_defio;
-
+	//ssbuf = vmalloc(ST7735S_WIDTH * ST7735S_HEIGHT * BPP / 8);
 	lcd = devm_kzalloc(&spi->dev, sizeof(struct st7735s), GFP_KERNEL);
 	if (IS_ERR(lcd)) {
 		dev_err(&spi->dev, "error mem <devm_kzalloc>\n");
 		return -ENOMEM;
 	}
-
+	// gpiod = devm_gpiod_get_optional(&spi->dev, "css", GPIOD_OUT_HIGH);
+	// if (IS_ERR(gpiod)) {
+	// 	ret = PTR_ERR(gpiod);
+	// 	if (ret != -EPROBE_DEFER)
+	// 		dev_err(&spi->dev, "Failed to get %s GPIO: %d\n",
+	// 			"cs", ret);
+	// 	devm_kfree(&spi->dev, lcd);
+	// 	return ret;
+	// }
+	// lcd->gpiod_cs = gpiod;
+	// ret = gpiod_direction_output(lcd->gpiod_cs, 0);
+	//gpiod_set_value(lcd->gpiod_cs, 0);
 	/* Get the Reset GPIO pin number */
-	gpiod = devm_gpiod_get_optional(&spi->dev, "reset", GPIOD_OUT_LOW);
+	gpiod = devm_gpiod_get_optional(&spi->dev, "reset", GPIOD_OUT_HIGH);
 	if (IS_ERR(gpiod)) {
 		ret = PTR_ERR(gpiod);
 		if (ret != -EPROBE_DEFER)
 			dev_err(&spi->dev, "Failed to get %s GPIO: %d\n",
 				"reset", ret);
+		// gpiod_put(lcd->gpiod_cs);
 		devm_kfree(&spi->dev, lcd);
 		return ret;
 	}
@@ -494,12 +501,13 @@ static int st7735s_probe(struct spi_device *spi)
 		if (ret != -EPROBE_DEFER)
 			dev_err(&spi->dev, "Failed to get %s GPIO: %d\n",
 				"dc", ret);
+		// gpiod_put(lcd->gpiod_cs);
 		gpiod_put(lcd->gpiod_reset);
 		devm_kfree(&spi->dev, lcd);
 		return ret;
 	}
 	lcd->gpiod_dc = gpiod;
-	gpiod_direction_output(lcd->gpiod_dc, 0);
+	gpiod_direction_output(lcd->gpiod_dc, 1);
 
 	strcpy(spi->modalias, ST7735S_DEVICE_NAME);
 	spi->max_speed_hz = SPI_SPEED_HZ;
@@ -509,12 +517,14 @@ static int st7735s_probe(struct spi_device *spi)
 	if (ret < 0) {
 		dev_err(&spi->dev, "failed to setup spi: %d\n", ret);
 		gpiod_put(lcd->gpiod_reset);
+		// gpiod_put(lcd->gpiod_cs);
 		gpiod_put(lcd->gpiod_dc);
 		devm_kfree(&spi->dev, lcd);
 		return ret;
 	}
-
 	lcd->spi = spi;
+	lcd->width  = ST7735S_WIDTH;
+	lcd->height = ST7735S_HEIGHT;
 
 	st7735s_reset(lcd);
 	st7735s_execute_command_list(lcd, init_cmds1);
@@ -529,16 +539,13 @@ static int st7735s_probe(struct spi_device *spi)
 	if (!info) {
 		gpiod_put(lcd->gpiod_reset);
 		gpiod_put(lcd->gpiod_dc);
+		// gpiod_put(lcd->gpiod_cs);
 		devm_kfree(&spi->dev, lcd);
 		return -ENOMEM;
 	}
-
+	lcd->lcd_info = info;
 	dev_info(&spi->dev, "frame buffer is allocated\n");
 
-	lcd->lcd_info = info;
-	lcd->spi = spi;
-	lcd->width  = ST7735S_WIDTH;
-	lcd->height = ST7735S_HEIGHT;
 	vmem_size = lcd->width * lcd->height * BPP / 8;
 
 	// vmem = vmalloc(vmem_size);
@@ -546,10 +553,11 @@ static int st7735s_probe(struct spi_device *spi)
 	// 	dev_err(&spi->dev, "Couldn't allocate graphical memory\n");
 	// 	gpiod_put(lcd->gpiod_reset);
 	// 	gpiod_put(lcd->gpiod_dc);
+	// 	// gpiod_put(lcd->gpiod_cs);
 	// 	devm_kfree(&spi->dev, lcd);
 	// 	return -ENOMEM;
 	// }
-	dev_info(&spi->dev, "frame vmem buffer is allocated\n");
+	// dev_info(&spi->dev, "frame vmem buffer is allocated\n");
 	mutex_init(&lcd->io_lock);
 
 	st7735sfb_defio = devm_kzalloc(&spi->dev, sizeof(struct fb_deferred_io),
@@ -559,13 +567,13 @@ static int st7735s_probe(struct spi_device *spi)
 		//vfree(vmem);
 		gpiod_put(lcd->gpiod_reset);
 		gpiod_put(lcd->gpiod_dc);
+		// gpiod_put(lcd->gpiod_cs);
 		devm_kfree(&spi->dev, lcd);
 		return -ENOMEM;
 	}
 	dev_info(&spi->dev, "frame st7735sfb_defio buffer is allocated\n");
 	st7735sfb_defio->delay = HZ / refreshrate;
-	//
-	//st7735sfb_defio->deferred_io = st7735sfb_deferred_io;
+	st7735sfb_defio->deferred_io = st7735sfb_deferred_io;
 	info->fbdefio = st7735sfb_defio;
 
 	info->fbops = &st7735sfb_ops;
@@ -579,13 +587,12 @@ static int st7735s_probe(struct spi_device *spi)
 	info->var.yres_virtual = lcd->height;
 	info->var.width = lcd->width;
 	info->var.height = lcd->height;
-	info->fix.smem_len = vmem_size;
-	// info->screen_base = (u8 __force __iomem *)vmem;
-	// info->fix.smem_start = __pa(vmem);;
+
+	//  info->screen_base = (u8 __force __iomem *)vmem;
+	//  info->fix.smem_start = __pa(vmem);
 		/* fb的虚拟地址 */
-	info->screen_base = dma_alloc_writecombine(NULL, info->fix.smem_len, &phy_addr,
-					 GFP_KERNEL);
-	info->fix.smem_start = phy_addr;  /* fb的物理地址 */
+	info->fix.smem_len = vmem_size;
+	info->screen_base = dma_alloc_writecombine(NULL, vmem_size, (dma_addr_t *)&info->fix.smem_start,GFP_KERNEL);
 	info->screen_size = (lcd->width) * (lcd->height);
 	info->flags = FBINFO_FLAG_DEFAULT | FBINFO_VIRTFB;
 	info->par = lcd;
@@ -594,9 +601,10 @@ static int st7735s_probe(struct spi_device *spi)
 	ret = fb_alloc_cmap(&info->cmap, MAX_PALETTE, 0);
 	if (ret < 0) {
 		kfree(info->pseudo_palette);
-		//vfree(vmem);
+		// vfree(vmem);
 		gpiod_put(lcd->gpiod_reset);
 		gpiod_put(lcd->gpiod_dc);
+		// gpiod_put(lcd->gpiod_cs);
 		devm_kfree(&spi->dev, lcd);
 		return -ENOMEM;
 	}
@@ -610,15 +618,16 @@ static int st7735s_probe(struct spi_device *spi)
 
 	dev_set_drvdata(&spi->dev, lcd);
 
-	/* Allocated swapped shadow buffer */
-	lcd->ssbuf = kmalloc(vmem_size, GFP_KERNEL);
+	// /* Allocated swapped shadow buffer */
+	lcd->ssbuf = kzalloc(vmem_size,GFP_KERNEL);
 	if (!lcd->ssbuf) {
 		fb_deferred_io_cleanup(info);
 		fb_dealloc_cmap(&info->cmap);
 		kfree(info->pseudo_palette);
-		//vfree(vmem);
+		// vfree(vmem);
 		gpiod_put(lcd->gpiod_reset);
 		gpiod_put(lcd->gpiod_dc);
+		// gpiod_put(lcd->gpiod_cs);
 		devm_kfree(&spi->dev, lcd);
 		return -ENOMEM;
 	}
@@ -630,21 +639,20 @@ static int st7735s_probe(struct spi_device *spi)
 			kfree(info->pseudo_palette);
 			//vfree(vmem);
 			gpiod_put(lcd->gpiod_reset);
+			// gpiod_put(lcd->gpiod_cs);
 			gpiod_put(lcd->gpiod_dc);
 			devm_kfree(&spi->dev, lcd);
 			dev_err(&spi->dev, "Error: ret = %d\n", ret);
 			return ret;
 		}
-	
- 	st7735s_thread = kthread_run(st7735s_update_screen, NULL, "st7735s_kthead");
 	dev_info(&spi->dev, "frame buffer is registered\n");
 
 	dev_info(&spi->dev, "spi driver probed\n");
 		// Test load image 128x128
-	st7735s_load_image(lcd, lcd_image);
-	msleep(2000);
-	//gpiod_set_value(lcd->gpiod_reset, 0);
-	// gpiod_set_value(lcd->gpiod_dc, 0);
+	//st7735s_load_image(lcd, lcd_image);
+	//msleep(3000);
+	//gpiod_set_value(lcd->gpiod_reset, 1);
+	//gpiod_set_value(lcd->gpiod_dc,0);
 	return 0;
 }
 
@@ -653,15 +661,17 @@ static int st7735s_remove(struct spi_device *spi)
 	struct st7735s *lcd = dev_get_drvdata(&spi->dev);
 
 	st7735s_write_command(lcd, ST7735S_DISPOFF);
-	kthread_stop(st7735s_thread);
+
 	unregister_framebuffer(lcd->lcd_info);
 	fb_deferred_io_cleanup(lcd->lcd_info);
+	dma_free_writecombine(NULL, lcd->lcd_info->fix.smem_len,lcd->lcd_info->screen_base, lcd->lcd_info->fix.smem_start);
 	fb_dealloc_cmap(&lcd->lcd_info->cmap);
 	kfree(lcd->lcd_info->pseudo_palette);
-	vfree(lcd->lcd_info->screen_base);
+	//vfree(lcd->lcd_info->screen_base);
 	framebuffer_release(lcd->lcd_info);
 
 	gpiod_put(lcd->gpiod_reset);
+	// gpiod_put(lcd->gpiod_cs);
 	gpiod_put(lcd->gpiod_dc);
 
 	dev_info(&spi->dev, "spi driver removed\n");

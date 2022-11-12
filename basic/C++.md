@@ -70,15 +70,9 @@ However  char const *p ： p point to char const or const char
 
 Ch=Getchar()//从输入流获得字符，这个时候缓冲区的数据是给了ch里，如果需要操作需要返回给输入流。如下：
 
-Ungetc(ch,stdin)//将变量ch中存放的字符退回给stdin输入流
+ungetc(ch,stdin)//将变量ch中存放的字符退回给stdin输入流
 
- 
 
- 
-
-​                               
-
- 
 
 explicit关键字可以防止构造函数进行隐式自动转换,这是种有隐患的操作
 
