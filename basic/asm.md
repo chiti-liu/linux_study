@@ -30,6 +30,16 @@ _TEXT是被指定（代码段）的段定义，_DATA是有初始化的段定义�
 
 ![img](../typora-user-images/clip_image004.jpg)
 
+普通寄存器：AX BX CX DX
+
+段寄存器：CS（代码段） DS（数据段） SS（栈段） ES（附加段）
+
+SS：SP栈顶指针
+
+CS：IP当前执行代码地址
+
+
+
 ### 精简指令集
 
 ![img](../typora-user-images/clip_image002.jpg)

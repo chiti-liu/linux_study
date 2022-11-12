@@ -1,6 +1,6 @@
 # <<linux 驱动开发>>学习日志
 
-- arch：包含和硬件体系结构相关的代码，每种平台占一个相应的目录，如 i386、arm、arm64、powerpc、mips 等。Linux 内核目前已经支持 30 种左右的体系结构。在 arch 目录下，存放的是各个平台以及各个平台的芯片对 Linux 内核进程调度、内存管理、中断等的支持，以及每个具体的 SoC 和电路板的板级支持代码。
+- arch：包含和硬件体系结构相关的代码，每种平台占一个相应的目录，如 i`386、arm、arm64、powerpc、mips` 等。Linux 内核目前已经支持 30 种左右的体系结构。在 arch 目录下，存放的是`各个平台`以及`各个平台的芯片`对 Linux 内核进程调度、内存管理、中断等的支持，以及每个具体的 SoC 和电路板的板级支持代码`bsp`。
 - block：块设备驱动程序 I/O 调度。
 - crypto：常用加密和散列算法（如 AES、SHA 等），还有一些压缩和 CRC 校验算法。
 - documentation：内核各部分的通用解释和注释。
@@ -42,10 +42,9 @@ EXPORT_SYMBOL	//内部对变量或者函数可以让该函数或变量可以被�
 EXPORT_SYMBOL_GPL	//内部对变量或者函数可以让该函数或变量可以被其他模块使用（申明了GPL协议）的使用
 ```
 
-#### 疑问：`static`不是可以限制函数或者变量只可以在当前文件中吗？为什么依然可以`EXPORT_SYMBOL`申明为外部，那这样申明有意义吗？只为了在某个文件中使用？
+#### 
 
-答：`Linux-2.6`之后默认**不导出**所有的符号，所以使用`EXPORT_SYMBOL()` 做标记。static增加可读性。`EXPORT_SYMBOL`标签内定义的函数或者符号对全部内核代码公开，不用修改内核代码就可以在内核模块中直接调用，
-即使用`EXPORT_SYMBOL`可以将一个函数/变量以符号的方式导出给其他模块使用。
+答：`Linux-2.6`之后默认**不导出**所有的符号，所以使用`EXPORT_SYMBOL()` 做标记。EXPORT_SYMBOL`标签内定义的函数或者符号对全部内核代码公开，不用修改内核代码就可以在内核模块中直接调用`,即使用`EXPORT_SYMBOL`可以将一个函数/变量以符号的方式导出给其他模块使用。
 符号的意思就是函数的入口地址，或者说是把这些符号和对应的地址保存起来的，在内核运行的过程中，可以找到这些符号对应的地址的。
 
 `EXPORT_SYMBOL`使用方法
@@ -79,6 +78,22 @@ modinfo: 生成模块的具体版本信息
 
 ### 中断
 
+```
+/**
+ * enum irqreturn
+ * @IRQ_NONE		interrupt was not from this device or was not handled
+ * @IRQ_HANDLED		interrupt was handled by this device
+ * @IRQ_WAKE_THREAD	handler requests to wake the handler thread
+ */
+enum irqreturn {
+	IRQ_NONE		= (0 << 0),
+	IRQ_HANDLED		= (1 << 0),
+	IRQ_WAKE_THREAD		= (1 << 1),
+};
+
+typedef enum irqreturn irqreturn_t;
+```
+
 可以分为上半部和下半部
 
 上半部：硬件中断，处理一些紧急且快速的事情；
@@ -89,11 +104,15 @@ modinfo: 生成模块的具体版本信息
 
 软件中断技术：
 
+```
+软中断（softirq）和tasklet仍然工作在原子上下文中，不允许睡眠，而工作队列运行于进程上下文，可以睡眠。
+```
+
 事情不是太长：`tasklet`
 
 事情多且复杂：工作队列
 
-新技术：`thread_irq(`针对多核设备，工作队列和`tasklet`只能在单核运行，浪费CPU资源)
+新技术：`thread_irq`(针对多核设备，工作队列和`tasklet`只能在单核运行，浪费CPU资源)，工作在内核级线程。
 
 （`hardwareirq,irq`）同时注册在`domain`域中(中断都注册在`domain`域  `irq_create_fwspec_mapping`)
 
@@ -138,7 +157,7 @@ https://www.cnblogs.com/sky-heaven/p/7390370.html
 `kmalloc()、kzalloc()、vmalloc()` 的区别是：
 
 1. kzalloc 是强制清零的 kmalloc 操作；（以下描述不区分 kmalloc 和 kzalloc）
-2. kmalloc 分配的内存大小有限制（128KB），而 vmalloc 没有限制；
+2. kmalloc 分配的内存大小有限制（128KB-16byte），而 vmalloc 没有限制；
 3. kmalloc 可以保证分配的内存物理地址是连续的，但是 vmalloc 不能保证；
 4. kmalloc 分配内存的过程可以是原子过程（使用 `GFP_ATOMIC`），而 vmalloc 分配内存时则可能产生阻塞；
 5. kmalloc 分配内存的开销小，因此 kmalloc 比 vmalloc 要快；
@@ -218,7 +237,7 @@ size：待分配的内存的大小，自动按页对齐。
 
 7、内存分配标志
 1、GFP_KERNEL:
-表示该次内存 分配由内核进程调用，凡是内核内存的正常分配，该分配方式最常用。如果空闲空间不足，该次分配将使得进程进入睡眠，等待空闲页出现。不能在中断上下文、自旋锁保护的临界区和中断屏蔽保护的临界区使用。
+表示该次内存分配由内核进程调用，凡是内核内存的正常分配，该分配方式最常用。如果空闲空间不足，该次分配将使得进程进入睡眠，等待空闲页出现。不能在中断上下文、自旋锁保护的临界区和中断屏蔽保护的临界区使用。
 
 2、GFP_ATOMIC:
 用于分配请求不是来自于进程上下文，而是来自于中断、任务队列处理、内核定时器等中断上下文的情况，此时不能进入休眠。如果空闲内存不足，立即返回。
@@ -247,7 +266,7 @@ https://www.cnblogs.com/pengdonglin137/p/3286627.html
 ### container_of
 
 ```
-https://www.linuxidc.com/Linux/2012-02/53701.htm#:~:text=containe,%E9%87%8F%E7%9A%84%E6%8C%87%E9%92%88%E7%9A%84%E5%8A%9F%E8%83%BD%E3%80%82
+https://www.linuxidc.com/Linux/2012-02/53701.htm#
 ```
 
 根据**数据成员的地址**确定**包含该数据成员结构体**的地址
@@ -685,20 +704,29 @@ int mod_timer(struct timer_list *timer, unsigned long expires)
 ### 互斥和同步
 
 1. 为什么自旋锁的临界区不能睡眠？
+
 2. arm 64处理器当中，我们如何实现独占访问内存。
+
+   ```
+   ldrex&strex
+   https://blog.csdn.net/Roland_Sun/article/details/47670099
+   ```
+
 3. 排队自旋锁是如何实现MCS锁的？
+
 4. 乐观自旋锁等待的判断条件是什么？
+
 5. 请你说出MCS锁机制的实现原理？
 
 
 
-临界区（critical region）是指访问和操作共享数据的代码段，其中的资源无法同时被所得执行线程访问，访问临界区的执行线程或代码路径成为并发源。我们为了避免并发访问临界区，软件工程师必须保证访问临界区的原子性，即在临界区被不能有多个并发源同时执行，整个临界区就像一个不可分割的整体。
+临界区（critical region）是指访问和操作共享数据的代码段，其中的资源无法同时被所得执行线程访问，访问临界区的执行线程或代码路径称为并发源。我们为了避免并发访问临界区，软件工程师必须保证访问临界区的原子性，即在临界区被不能有多个并发源同时执行，整个临界区就像一个不可分割的整体。
 
 在linux内核当中产生访问的并发源主要有：中断和异常、内核抢占、多处理器并发执行、软中断和tasklet。
 
 考虑SMP（Share memory processor）系统：
 
-- 同一类型的中断程序不会并发执行，但是不同类型的中断可能送达可能送达不同的CPU，因此不同类型的中断处理程序可能会并发执行。
+- 同一类型的中断程序不会并发执行，但是不同类型的中断可能送达不同的CPU，因此不同类型的中断处理程序可能会并发执行。
 - 同一类型的软中断会在不同的CPU上并发执行。
 - 同意类型的tasklet是串行执行的，不会在多个PCU上并发执行。
 - 不同CPU上的进程上下文会并发执行。
@@ -787,6 +815,12 @@ struct mutex {
 
 #### RCU机制
 
+```
+https://www.cnblogs.com/codestack/p/12447983.html
+```
+
+
+
 ### 驱动检测设备原理
 
 #### 不支持热插拔设备
@@ -811,6 +845,17 @@ struct mutex {
 ### 内联汇编
 
 ![image-20220822150643362](../typora-user-images/image-20220822150643362.png)
+
+```
+1. Clobbers 是一个以逗号分隔的寄存器列表（该列表中还可以存放一些特殊值，用于表示一些特殊用途）。
+2. 它的目的是为了告知编译器，Clobbers 列表中的寄存器会被该asm语句中的汇编代码隐性修改。
+3. 由于 Clobbers 里的寄存器会被asm语句中的汇编代码隐性修改，编译器在为 input operands 和 output operands 挑选寄存器时，就不会使用 Clobbers 里指定的寄存器，这样就避免了发生数据覆盖等逻辑错误。
+4. 通俗来讲，Clobbers 的用途就是为了告诉编译器，我这里指定的这些寄存器在该asm语句的汇编代码中用了，你在编译这条asm语句时，如果需要用到寄存器，别用我这里指定的这些，否则就都乱了。
+5. Clobbers 里的特殊值可以为 cc，用于表示该平台的 flags 寄存器会被隐性修改（比如 x86 平台的 eflags 寄存器）。
+6. Clobbers 里的特殊值也可以为 memory，用于表示某些内存数据会被隐性使用或隐性修改，所以在执行这条asm语句之前，编译器会保证所有相关的、涉及到内存的寄存器里的内容会被刷到内存中，然后再执行这条asm语句。在执行完这条asm语句之后，这些寄存器的值会再被重新load回来，然后再执行这条asm语句后面的逻辑。这样就保证了所有操作用到的数据都是最新的，是正确的。
+```
+
+
 
 ### 设备树和驱动匹配
 
@@ -967,6 +1012,19 @@ https://www.cnblogs.com/QJohnson/archive/2011/06/24/2089414.html
 https://blog.csdn.net/Aa_lihua/article/details/106064773
 ```
 
+- platform_device
+  - dev
+    - of_node
+      - name
+      - type
+      - properties
+- platform_driver
+  - driver
+    - of_match_table
+      - name
+      - type
+      - compatible
+
 ### &gpio*
 
 ![image-20220824100806571](../typora-user-images/image-20220824100806571.png)
@@ -988,12 +1046,21 @@ https://deepinout.com/linux-kernel-api/device-driver-and-device-management/
 函数register_chrdev()调用函数register_chrdev()实现其功能，函数register_chrdev()首先调用函数__register_chrdev_region()创建一个字符设备区，此设备区的主设备号相同，由函数register_chrdev()的第一个参数决定，次设备号的变化范围是0～256，设备区的名字为函数register_chrdev()的第二个参数，此函数将更改`/proc/devices`文件的内容；然后动态申请一个新的字符设备cdev结构体变量，对其部分字段进行初始化，初始化完成之后将其加入Linux内核系统中，即向Linux内核系统添加一个新的字符设备。函数register_chrdev()调用函数cdev_alloc()动态申请一个字符设备，调用函数cdev_add()将其加入Linux内核系统中。
 
 - 文件包含：#include <linux/fs.h>
+
 - int __register_chrdev(unsigned int major, unsigned int baseminor,
   		      unsigned int count, const char *name,
                 		      const struct file_operations *fops)
   - __register_chrdev_region(major, baseminor, count, name);
+  
+  - 下面两个可以替换后成cdev_init
+  
   - cdev_alloc();
+  
+  - 	cdev->owner = fops->owner;
+      	cdev->ops = fops;
+  
   - kobject_set_name(&cdev->kobj, "%s", name);
+  
   - cdev_add(cdev, MKDEV(cd->major, baseminor), count);
 
 #### device_create(class,    ,MKDEV(),    ,name""/dev/name"")
@@ -1478,3 +1545,16 @@ https://www.cnblogs.com/wwang/archive/2010/11/14/1876735.html
 > ```
 >
 > 
+
+### inlcude/uapi
+
+在此目录下表示用户空间同样**拥有和可以使用**里面的成员。
+
+### 内存屏障
+
+```
+https://zhuanlan.zhihu.com/p/502468456
+```
+
+### IO端口和IO内存访问
+

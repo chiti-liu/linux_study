@@ -97,7 +97,7 @@
 #define UART_RX_IRQ_ENABLE(uart)   UART_REG_OR(uart, R_STS, RXIENB)
 #define UART_TX_IRQ_ENABLE(uart)   UART_REG_OR(uart, R_STS, TXIENB)
 
-#define xgate_cop12_uart_DEV_NAME	"ttyxgate_cop12"
+#define XGATE_COP12_UART_DEV_NAME	"ttyxgate_cop12"
 
 struct xgate_cop12_uart_port {
 	struct uart_port port;
@@ -677,7 +677,7 @@ static int xgate_cop12_uart_remove(struct platform_device *pdev)
 }
 
 static const struct of_device_id xgate_cop12_uart_dt_ids[] = {
-	{ .compatible = "snps,xgate_cop12-uart" },
+	{ .compatible = "xilinx,xgate_cop12-uart" },
 	{ /* Sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, xgate_cop12_uart_dt_ids);
