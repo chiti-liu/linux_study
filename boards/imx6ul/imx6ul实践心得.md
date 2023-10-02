@@ -15,7 +15,7 @@ make dtbs	-j12//编译设备树
 ### 挂载
 
 ```
-mount -t nfs -o nolock 192.168.137.8:/home/forlinx/nfs_rootfs /mnt/nfs
+mount -t nfs -o nolock 192.168.0.8:/home/forlinx/nfs_rootfs /mnt/nfs
  
 eth0      Link encap:Ethernet  HWaddr 5A:A4:53:1D:87:CE
           inet addr:192.168.0.232  Bcast:192.168.0.255  Mask:255.255.255.0
@@ -39,5 +39,22 @@ boot
 
 
 echo "7 4 1 7" > /proc/sys/kernel/printk
+```
+
+### QT移植
+
+```
+ 	   export  QT_QPA_PLATFORM=linuxfb:tty=/dev/fb0
+
+       export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/mnt/nfs/Qt/lib
+
+       export QT_QPA_PLATFORM_PLUGIN_PATH=/mnt/nfs/Qt/plugins
+
+       export  QT_PLUGIN_PATH=/mnt/nfs/lib/plugins
+
+       export  QT_QPA_FONTDIR=/mnt/nfs/lib/fonts
+
+       export  QT_DEBUG_PLUGINS=1
+这里说明下fonts是字体所在的目录，按实际配置，plugins是QT的插件，lib是QT库（可按需加载）。
 ```
 
