@@ -1,9 +1,30 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0" version="24.7.6">
   <diagram name="第 1 页" id="4LgPuaGc_3I4EqOeIGlh">
-    <mxGraphModel>
+    <mxGraphModel dx="1379" dy="751" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
+        <mxCell id="hepcZfpf0PNiuKqdfhci-6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="hepcZfpf0PNiuKqdfhci-1" target="hepcZfpf0PNiuKqdfhci-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="hepcZfpf0PNiuKqdfhci-1" value="BSP启动管理模块" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="290" y="349" width="281" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="hepcZfpf0PNiuKqdfhci-7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="hepcZfpf0PNiuKqdfhci-2" target="hepcZfpf0PNiuKqdfhci-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="hepcZfpf0PNiuKqdfhci-2" value="内核底层初始化" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="290" y="218" width="281" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="hepcZfpf0PNiuKqdfhci-5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="hepcZfpf0PNiuKqdfhci-3" target="hepcZfpf0PNiuKqdfhci-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="hepcZfpf0PNiuKqdfhci-3" value="BSP 所包含的各种驱动初始化" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="290" y="480" width="281" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="hepcZfpf0PNiuKqdfhci-4" value="系统启动完成" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="290" y="615" width="281" height="60" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
