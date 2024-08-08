@@ -61,6 +61,9 @@
         <mxCell id="HjCa4htd5Y2prd8pQsEb-2" value="作为独立于UBOOT和OS的独立模块，可以动态结合uboot和OS的特性，将驱动模块化分成多个模块，然后根据不同的组合，用快算法（举例，可以用其他算法），先最小化的把必要模块组成BSP启动系统，记录启动状况，然后再以最大化启动，记录启动状态，如果系统卡死，通过重启方式，独立调用芯片软重启，再逐渐采取二叉树结合不同模块，完成启动，记录情况，最后生成表格，进行直观展示不同模块间影响，方便调试的同时，也能加快开发进程。" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="467" y="1312" width="778" height="196" as="geometry" />
         </mxCell>
+        <mxCell id="HjCa4htd5Y2prd8pQsEb-3" value="一种新型的BSP设计模式，启动保障，这个模块作为OS的一部分，但是可以作为管理模块，将不同模块进行优先级（可以结合其他特性）排列，将系统启动且规避其他障碍项。" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="464" y="1504" width="778" height="196" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
