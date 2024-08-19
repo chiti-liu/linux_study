@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36 Edg/127.0.0.0" version="24.7.7">
   <diagram name="第 1 页" id="4LgPuaGc_3I4EqOeIGlh">
-    <mxGraphModel dx="1339" dy="751" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1739" dy="751" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -15,9 +15,6 @@
         </mxCell>
         <mxCell id="V9mRmh9vE17ADnBNHQ7B-13" value="创建独立于OS的线程模块，从内核线程开始进行校验记录，创建数据结构，进行存储错误点，然后根据类别，找到对应数据库，在系统启动后进行自适应调整学习，以txt文本格式转化成待完善节点，方便下一步调试，节省调试时间&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="986" y="1151" width="270" height="82" as="geometry" />
-        </mxCell>
-        <mxCell id="HjCa4htd5Y2prd8pQsEb-1" value="" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="371" y="1060" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="HjCa4htd5Y2prd8pQsEb-2" value="作为独立于UBOOT和OS的独立模块，可以动态结合uboot和OS的特性，将驱动模块化分成多个模块，然后根据不同的组合，用快算法（举例，可以用其他算法），先最小化的把必要模块组成BSP启动系统，记录启动状况，然后再以最大化启动，记录启动状态，如果系统卡死，通过重启方式，独立调用芯片软重启，再逐渐采取二叉树结合不同模块，完成启动，记录情况，最后生成表格，进行直观展示不同模块间影响，方便调试的同时，也能加快开发进程。" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="467" y="1312" width="778" height="196" as="geometry" />
@@ -46,17 +43,8 @@
         <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-12" value="内核层初始化" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="318.5" y="197" width="181" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-16" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="dNdPNvrtT_cwL0Fl9-qQ-13" target="dNdPNvrtT_cwL0Fl9-qQ-15">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
         <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-13" value="BSP保障管理模块初始化" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="318.5" y="298" width="182" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-18" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="dNdPNvrtT_cwL0Fl9-qQ-15" target="dNdPNvrtT_cwL0Fl9-qQ-17">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
-        <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-15" value="装载驱动模块并做动态映射处理" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-          <mxGeometry x="319" y="399" width="182" height="60" as="geometry" />
         </mxCell>
         <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-20" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="dNdPNvrtT_cwL0Fl9-qQ-17" target="dNdPNvrtT_cwL0Fl9-qQ-28">
           <mxGeometry relative="1" as="geometry">
@@ -88,7 +76,7 @@
           <mxGeometry x="483" y="471" width="151" height="30" as="geometry" />
         </mxCell>
         <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-30" value="按优先级顺序加载驱动" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
-          <mxGeometry x="344" y="475" width="60" height="53" as="geometry" />
+          <mxGeometry x="341" y="475" width="60" height="53" as="geometry" />
         </mxCell>
         <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-37" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="dNdPNvrtT_cwL0Fl9-qQ-31" target="dNdPNvrtT_cwL0Fl9-qQ-36">
           <mxGeometry relative="1" as="geometry" />
@@ -110,7 +98,71 @@
           <mxGeometry x="253" y="541" width="24" height="96" as="geometry" />
         </mxCell>
         <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-36" value="系统应用层" style="whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
-          <mxGeometry x="326" y="777" width="167" height="60" as="geometry" />
+          <mxGeometry x="316" y="777" width="188" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-49" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="dNdPNvrtT_cwL0Fl9-qQ-51">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-78" y="563" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-50" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="dNdPNvrtT_cwL0Fl9-qQ-51">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-225.5" y="650" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-51" value="异常处理修复" style="rhombus;whiteSpace=wrap;html=1;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="-307" y="523" width="163" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-53" value="修复成功" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="-144" y="525" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-56" value="按优先级顺序加载驱动" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="-291" y="468" width="60" height="53" as="geometry" />
+        </mxCell>
+        <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-62" value="装载成功" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="423" y="614" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-63" value="修复失败" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="-214" y="608.5" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-65" value="BSP保障管理模块&lt;br&gt;重新进行动态映射" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-77" y="534" width="182" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-66" value="装载驱动模块并做动态映射处理" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+          <mxGeometry x="274.5" y="399" width="269" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-69" value="" style="endArrow=classic;html=1;rounded=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" target="dNdPNvrtT_cwL0Fl9-qQ-66">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="409" y="359" as="sourcePoint" />
+            <mxPoint x="459" y="309" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-72" value="驱动运行过程中异常" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-313" y="282" width="179.5" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-73" value="" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="-223.5" y="339" as="sourcePoint" />
+            <mxPoint x="-223.5" y="382" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-74" value="记录异常页" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+          <mxGeometry x="-333" y="386" width="223" height="59" as="geometry" />
+        </mxCell>
+        <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-76" value="" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="408.5" y="459" as="sourcePoint" />
+            <mxPoint x="409" y="532" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-77" value="" style="endArrow=classic;html=1;rounded=0;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="-225" y="445" as="sourcePoint" />
+            <mxPoint x="-225.5" y="523" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="dNdPNvrtT_cwL0Fl9-qQ-81" value="页回收，应用回收" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+          <mxGeometry x="-339" y="650" width="230" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
